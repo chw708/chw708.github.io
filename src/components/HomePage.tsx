@@ -94,7 +94,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                         <h3 className="font-medium text-foreground">{checkIn.title}</h3>
                         {checkIn.completed && (
                           <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                            Completed
+                            ✓ Done Today
                           </div>
                         )}
                       </div>

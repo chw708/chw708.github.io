@@ -82,91 +82,134 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
 
       try {
         // Get last few days of questions to avoid repetition
-        const recentQuestions = dailyQuestions.slice(0, 3).flatMap((q: any) => 
+        const recentQuestions = dailyQuestions.slice(0, 5).flatMap((q: any) => 
           q.questions?.map((question: any) => question.text) || []
         ).join('\n- ')
 
-        const prompt = spark.llmPrompt`Generate 2-3 unique daily health assessment questions for a morning check-in on ${new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}. 
+        // Get current day info for more contextual questions
+        const dayInfo = new Date().toLocaleDateString('en', { 
+          weekday: 'long', 
+          month: 'long', 
+          day: 'numeric',
+          year: 'numeric'
+        })
 
-IMPORTANT: These should be completely DIFFERENT from these recent questions used in past few days:
-${recentQuestions ? `- ${recentQuestions}` : 'No recent questions found'}
+        const prompt = spark.llmPrompt`Generate 2-3 completely unique daily health assessment questions for a morning check-in on ${dayInfo}. 
 
-Also ensure they are DIFFERENT from the standard questions about sleep, weight, fatigue, stiffness, blood pressure, and blood sugar.
+CRITICAL: These questions must be entirely DIFFERENT from these recent questions used in past days:
+${recentQuestions ? `Recent questions used:\n- ${recentQuestions}` : 'No recent questions found (first time)'}
 
-Focus on varied aspects of daily health such as:
-- Hydration awareness and thirst levels
-- Appetite and hunger patterns  
-- Balance, coordination, or dizziness
-- Breathing comfort and ease
-- Temperature sensitivity (feeling too hot/cold)
-- Joint flexibility or morning mobility
-- Energy patterns throughout the day
-- Digestive comfort
-- Mental clarity and focus
-- Physical comfort while sitting/standing
-- Minor symptoms awareness
-- Skin health and sensitivity
-- Eye strain or vision comfort
-- Hearing clarity
-- Sleep quality (dreams, restfulness)
-- Physical activity readiness
+AVOID these standard topics covered elsewhere: sleep duration, weight, fatigue level, body stiffness, blood pressure, blood sugar.
 
-Create questions that are:
-- Simple and easy to understand
-- Relevant to elderly and health-conscious users
-- Different from recent days' questions
-- Compassionate in tone
-- Focused on immediate physical/mental sensations
-- Diverse in the health aspects they cover
+Focus on diverse health aspects like:
+- Hydration levels and morning thirst
+- Appetite and digestive comfort
+- Balance, coordination, steadiness
+- Breathing ease and respiratory comfort  
+- Temperature sensitivity (hot/cold feelings)
+- Joint flexibility and movement ease
+- Mental clarity and cognitive sharpness
+- Eye comfort, vision clarity
+- Hearing quality
+- Skin sensations (dryness, itching, etc.)
+- Morning energy readiness
+- Physical comfort in positions
+- Minor symptom awareness
+- Circulation feelings (tingling, warmth)
+- Seasonal health considerations
+- Emotional readiness for the day
 
-Return a JSON array with 2-3 questions in this exact format:
+Generate questions that are:
+- Completely unique from recent days
+- Simple, clear, and gentle in tone
+- Appropriate for elderly/health-conscious users
+- Focused on immediate morning sensations
+- Covering different health dimensions each day
+
+Return a valid JSON array with exactly 2-3 questions:
 [
-  {"id": "hydration_${Date.now()}", "text": "How is your thirst level this morning?", "type": "scale", "required": false},
-  {"id": "appetite_${Date.now() + 1}", "text": "How would you describe your appetite today?", "type": "multiple", "options": ["Strong", "Normal", "Weak", "No appetite"], "required": false}
+  {"id": "unique_${Date.now()}_1", "text": "Your question here", "type": "scale", "required": false},
+  {"id": "unique_${Date.now()}_2", "text": "Another question", "type": "multiple", "options": ["Option1", "Option2", "Option3"], "required": false}
 ]
 
-Types available: 
-- "scale" (1-10 rating)
-- "boolean" (yes/no)
-- "text" (short answer)
-- "multiple" (with options array)
+Available types:
+- "scale" (1-10 rating with descriptive anchors)
+- "boolean" (yes/no questions)
+- "text" (short free text)
+- "multiple" (select from provided options)
 
-Make each question unique and meaningful for health tracking.`
+Make sure each question explores a completely different health aspect than recent days.`
         
         const response = await spark.llm(prompt, "gpt-4o-mini", true)
         const questions = JSON.parse(response)
         
         const todayQuestions = {
           date: today,
-          questions: questions
+          questions: questions,
+          generated: new Date().toISOString()
         }
         
-        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 6)]) // Keep last 7 days
+        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 9)]) // Keep last 10 days
       } catch (error) {
         console.error('Failed to generate questions:', error)
-        // Fallback questions if AI fails
-        const fallbackQuestions = [
-          {
-            id: `balance_${Date.now()}`,
-            text: "How steady do you feel on your feet this morning?",
-            type: "scale",
-            required: false
-          },
-          {
-            id: `appetite_${Date.now() + 1}`,
-            text: "How would you describe your appetite today?",
-            type: "multiple",
-            options: ["Strong", "Normal", "Weak", "No appetite"],
-            required: false
-          }
+        // More varied fallback questions
+        const fallbackOptions = [
+          [
+            {
+              id: `hydration_${Date.now()}`,
+              text: "How is your thirst level this morning?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `clarity_${Date.now() + 1}`,
+              text: "How clear and sharp is your thinking right now?",
+              type: "scale", 
+              required: false
+            }
+          ],
+          [
+            {
+              id: `appetite_${Date.now()}`,
+              text: "How would you describe your appetite this morning?",
+              type: "multiple",
+              options: ["Very hungry", "Moderately hungry", "Not very hungry", "No appetite"],
+              required: false
+            },
+            {
+              id: `breathing_${Date.now() + 1}`,
+              text: "Is your breathing feeling comfortable and easy?",
+              type: "boolean",
+              required: false
+            }
+          ],
+          [
+            {
+              id: `balance_${Date.now()}`,
+              text: "How steady do you feel on your feet this morning?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `temperature_${Date.now() + 1}`,
+              text: "Are you feeling too warm, too cold, or just right?",
+              type: "multiple",
+              options: ["Too warm", "Just right", "Too cold", "Variable"],
+              required: false
+            }
+          ]
         ]
+        
+        const randomFallback = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)]
         
         const todayQuestions = {
           date: today,
-          questions: fallbackQuestions
+          questions: randomFallback,
+          generated: new Date().toISOString(),
+          fallback: true
         }
         
-        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 6)])
+        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 9)])
       }
     }
 
@@ -181,42 +224,43 @@ Make each question unique and meaningful for health tracking.`
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 90 // Start with an even higher base score to be less sensitive
+    let score = 95 // Start with very high base score to be much less sensitive
     
-    // Sleep score (0-8 points) - very forgiving ranges
+    // Sleep score (0-6 points) - extremely forgiving ranges
     if (data.sleep !== null) {
-      if (data.sleep < 3 || data.sleep > 12) score -= 8
-      else if (data.sleep < 4 || data.sleep > 11) score -= 4
-      else if (data.sleep < 5 || data.sleep > 10) score -= 2
-      else if (data.sleep < 6 || data.sleep > 9) score -= 1
-      // 6-9 hours gets no penalty (very forgiving range)
+      if (data.sleep < 3 || data.sleep > 12) score -= 6
+      else if (data.sleep < 4.5 || data.sleep > 10.5) score -= 3
+      else if (data.sleep < 5.5 || data.sleep > 9.5) score -= 1
+      // 5.5-9.5 hours gets no penalty (extremely forgiving range)
     }
     
-    // Fatigue score (0-8 points) - very forgiving
+    // Fatigue score (0-5 points) - very gentle penalties
     if (data.fatigue !== null) {
-      if (data.fatigue > 9) score -= 8
-      else if (data.fatigue > 7) score -= 4
-      else if (data.fatigue > 6) score -= 1
-      // Only penalize if fatigue > 6, very gentle penalty
+      if (data.fatigue > 8) score -= 5
+      else if (data.fatigue > 7) score -= 2
+      // Only penalize if fatigue > 7, minimal impact
     }
     
-    // Swelling penalty (0-2 points) - minimal impact
-    if (data.swelling) score -= 2
+    // Swelling penalty (0-1 points) - very minimal impact
+    if (data.swelling) score -= 1
     
-    // Stiffness penalty (0-5 points) - very reduced and capped
+    // Stiffness penalty (0-3 points) - much more forgiving
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    if (stiffnessCount > 3) score -= 5
-    else if (stiffnessCount > 1) score -= 2
-    else if (stiffnessCount === 1) score -= 1
+    if (stiffnessCount > 4) score -= 3
+    else if (stiffnessCount > 2) score -= 1
+    // Only significant penalty if many stiff areas
     
-    // Bonus for completing additional questions
+    // Generous bonuses for engagement
     const additionalAnswered = Object.keys(data.additionalQuestions).length
-    score += additionalAnswered * 2
+    score += additionalAnswered * 3 // Higher bonus for answering questions
     
     // Extra bonus for vitals tracking
-    if (data.bloodPressure || data.bloodSugar) score += 3
+    if (data.bloodPressure || data.bloodSugar) score += 5
     
-    return Math.max(70, Math.min(100, score)) // Minimum score of 70, higher floor
+    // Bonus for simply completing the check-in
+    score += 2
+    
+    return Math.max(75, Math.min(100, score)) // Minimum score of 75, much higher floor
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
@@ -266,7 +310,8 @@ Make each question unique and meaningful for health tracking.`
         date: new Date().toISOString(),
         ...data,
         healthScore,
-        advice
+        advice,
+        completedAt: new Date().toISOString()
       }
       
       // Remove any existing entry for today and add the new one

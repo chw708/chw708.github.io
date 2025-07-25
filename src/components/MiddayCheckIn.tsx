@@ -84,7 +84,8 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
   const handleComplete = () => {
     const newEntry = {
       date: new Date().toISOString(),
-      ...data
+      ...data,
+      completedAt: new Date().toISOString()
     }
     
     // Remove any existing entry for today and add the new one

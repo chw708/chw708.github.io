@@ -172,7 +172,8 @@ Create a supportive summary that acknowledges their experiences and ends on a ho
     
     const newEntry = {
       date: new Date().toISOString(),
-      ...finalData
+      ...finalData,
+      completedAt: new Date().toISOString()
     }
     
     // Remove any existing entry for today and add the new one
