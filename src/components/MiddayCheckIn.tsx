@@ -91,11 +91,18 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
     // Remove any existing entry for today and add the new one
     setMiddayHistory((prev: any[]) => {
       const filteredHistory = prev.filter((entry: any) => !isToday(entry.date))
-      return [newEntry, ...filteredHistory]
+      const newHistory = [newEntry, ...filteredHistory]
+      console.log('Midday check-in saved:', newEntry)
+      console.log('Updated midday history:', newHistory)
+      return newHistory
     })
     
     setData(data) // Follow same pattern as night reflection
-    onComplete()
+    
+    // Small delay to ensure data is persisted before navigation
+    setTimeout(() => {
+      onComplete()
+    }, 100)
   }
 
   return (

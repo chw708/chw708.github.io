@@ -329,11 +329,18 @@ Make sure each question explores a completely different health aspect than recen
       // Remove any existing entry for today and add the new one
       setMorningHistory((prev: any[]) => {
         const filteredHistory = prev.filter((entry: any) => !isToday(entry.date))
-        return [newEntry, ...filteredHistory]
+        const newHistory = [newEntry, ...filteredHistory]
+        console.log('Morning check-in saved:', newEntry)
+        console.log('Updated morning history:', newHistory)
+        return newHistory
       })
       
       setData(finalData)
-      onComplete()
+      
+      // Small delay to ensure data is persisted before navigation
+      setTimeout(() => {
+        onComplete()
+      }, 100)
     }
   }
 

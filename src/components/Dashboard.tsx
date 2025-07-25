@@ -15,13 +15,39 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [morningHistory] = useKV('morning-history', [])
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])
+  
+  // Force a re-render when data changes
+  const [refreshKey, setRefreshKey] = useState(0)
+  
+  useEffect(() => {
+    setRefreshKey(prev => prev + 1)
+  }, [morningHistory, middayHistory, nightHistory])
+  
   // Get today's date
   const today = getTodayDateString()
 
-  // Check if there are entries for today in each history - more robust checking
-  const hasTodayMorning = morningHistory.some((entry: any) => isToday(entry.date))
-  const hasTodayMidday = middayHistory.some((entry: any) => isToday(entry.date))
-  const hasTodayNight = nightHistory.some((entry: any) => isToday(entry.date))
+  // Check if there are entries for today in each history - more robust checking with detailed logging
+  const hasTodayMorning = morningHistory.some((entry: any) => {
+    const isMatchingToday = isToday(entry.date)
+    return isMatchingToday
+  })
+  const hasTodayMidday = middayHistory.some((entry: any) => {
+    const isMatchingToday = isToday(entry.date)
+    return isMatchingToday
+  })
+  const hasTodayNight = nightHistory.some((entry: any) => {
+    const isMatchingToday = isToday(entry.date)
+    return isMatchingToday
+  })
+
+  // Debug logging
+  console.log('Dashboard - Today:', today)
+  console.log('Dashboard - Morning history:', morningHistory)
+  console.log('Dashboard - Has today morning:', hasTodayMorning)
+  console.log('Dashboard - Midday history:', middayHistory)
+  console.log('Dashboard - Has today midday:', hasTodayMidday)
+  console.log('Dashboard - Night history:', nightHistory)
+  console.log('Dashboard - Has today night:', hasTodayNight)
 
   const getCurrentHealthScore = () => {
     const todayEntry = morningHistory.find((entry: any) => isToday(entry.date))
@@ -161,40 +187,71 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   <Calendar size={20} />
                   Today's Summary
                 </CardTitle>
+                {/* Debug section - remove in production */}
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>Morning entries: {morningHistory.length} | Today: {hasTodayMorning ? 'YES' : 'NO'}</p>
+                  <p>Midday entries: {middayHistory.length} | Today: {hasTodayMidday ? 'YES' : 'NO'}</p>
+                  <p>Night entries: {nightHistory.length} | Today: {hasTodayNight ? 'YES' : 'NO'}</p>
+                  <p>Today date: {today}</p>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setRefreshKey(prev => prev + 1)}
+                    className="mt-2"
+                  >
+                    Force Refresh ({refreshKey})
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {hasTodayMorning && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm font-medium text-green-800">Morning Check-in Complete</p>
-                    <p className="text-xs text-green-600">
-                      Sleep: {morningHistory.find((entry: any) => isToday(entry.date))?.sleep}h • Health Score: {morningHistory.find((entry: any) => isToday(entry.date))?.healthScore}
+                  <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <p className="text-sm font-semibold text-green-800">✅ 아침 체크인 완료</p>
+                    </div>
+                    <p className="text-xs text-green-600 ml-4">
+                      수면: {morningHistory.find((entry: any) => isToday(entry.date))?.sleep}시간 • 건강 점수: {morningHistory.find((entry: any) => isToday(entry.date))?.healthScore}점
                     </p>
                   </div>
                 )}
                 
                 {hasTodayMidday && (
-                  <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                    <p className="text-sm font-medium text-orange-800">Midday Log Complete</p>
-                    <p className="text-xs text-orange-600">
-                      Meals: {middayHistory.find((entry: any) => isToday(entry.date))?.meals?.length || 0} • Mood: {middayHistory.find((entry: any) => isToday(entry.date))?.mood}
+                  <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <p className="text-sm font-semibold text-orange-800">✅ 점심 기록 완료</p>
+                    </div>
+                    <p className="text-xs text-orange-600 ml-4">
+                      식사: {middayHistory.find((entry: any) => isToday(entry.date))?.meals?.length || 0}회 • 기분: {middayHistory.find((entry: any) => isToday(entry.date))?.mood}
                     </p>
                   </div>
                 )}
                 
                 {hasTodayNight && (
-                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                    <p className="text-sm font-medium text-purple-800">Night Reflection Complete</p>
-                    <p className="text-xs text-purple-600">
-                      Stress Level: {nightHistory.find((entry: any) => isToday(entry.date))?.reflections?.stressLevel}/10
+                  <div className="p-4 bg-purple-50 border-l-4 border-purple-500 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <p className="text-sm font-semibold text-purple-800">✅ 저녁 성찰 완료</p>
+                    </div>
+                    <p className="text-xs text-purple-600 ml-4">
+                      스트레스 레벨: {nightHistory.find((entry: any) => isToday(entry.date))?.reflections?.stressLevel}/10
                     </p>
                   </div>
                 )}
 
                 {!hasTodayMorning && !hasTodayMidday && !hasTodayNight && (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground">
-                      No check-ins completed today yet. Start with your morning check-in!
+                  <div className="text-center py-6">
+                    <p className="text-muted-foreground text-base">
+                      오늘 아직 체크인을 완료하지 않았습니다.<br/>
+                      아침 체크인부터 시작해보세요!
                     </p>
+                    <Button 
+                      className="mt-3" 
+                      onClick={() => onNavigate('morning')}
+                    >
+                      아침 체크인 시작
+                    </Button>
                   </div>
                 )}
               </CardContent>
