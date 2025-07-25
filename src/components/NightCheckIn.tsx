@@ -171,7 +171,7 @@ Create a supportive summary that acknowledges their experiences and ends on a ho
     }
     
     const newEntry = {
-      date: new Date().toISOString(),
+      date: today, // Use consistent date format
       ...finalData,
       completedAt: new Date().toISOString()
     }

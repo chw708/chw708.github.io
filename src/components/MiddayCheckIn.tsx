@@ -83,7 +83,7 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
 
   const handleComplete = () => {
     const newEntry = {
-      date: new Date().toISOString(),
+      date: today, // Use consistent date format
       ...data,
       completedAt: new Date().toISOString()
     }

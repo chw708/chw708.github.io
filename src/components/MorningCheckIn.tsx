@@ -308,7 +308,7 @@ Make sure each question explores a completely different health aspect than recen
       const advice = getHealthAdvice(healthScore, data)
       
       const newEntry = {
-        date: new Date().toISOString(),
+        date: today, // Use consistent date format
         ...data,
         healthScore,
         advice,
