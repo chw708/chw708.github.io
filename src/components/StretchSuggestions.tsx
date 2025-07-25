@@ -41,15 +41,17 @@ const stretchDatabase: Record<string, string[]> = {
 }
 
 export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestionsProps) {
-  const relevantStretches = stiffnessAreas
-    .filter(area => area !== 'None' && stretchDatabase[area])
-    .map((area, index) => {
-      const stretches = stretchDatabase[area]
-      // Use a different approach to get varied stretches - use index modulo to ensure diversity
-      const stretchIndex = (index + Math.floor(Date.now() / (1000 * 60 * 60 * 24))) % stretches.length
-      const selectedStretch = stretches[stretchIndex]
-      return { area, stretch: selectedStretch }
-    })
+  const uniqueAreas = [...new Set(stiffnessAreas.filter(area => area !== 'None' && stretchDatabase[area]))]
+  
+  const relevantStretches = uniqueAreas.map((area, index) => {
+    const stretches = stretchDatabase[area]
+    // Use daily seed plus area index to ensure different stretches for different areas
+    const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
+    const areaHash = area.charCodeAt(0) * index // Simple hash based on area name and position
+    const stretchIndex = (dayOfYear + areaHash) % stretches.length
+    const selectedStretch = stretches[stretchIndex]
+    return { area, stretch: selectedStretch }
+  })
 
   if (relevantStretches.length === 0) {
     return null

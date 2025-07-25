@@ -14,18 +14,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [morningHistory] = useKV('morning-history', [])
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])
-  const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
-    morning: false,
-    midday: false,
-    night: false,
-    date: new Date().toDateString()
-  })
-
-  // Ensure today's checkins are properly initialized for the current date
+  // Get today's date
   const today = new Date().toDateString()
-  const isToday = todayCheckins.date === today
 
-  // Check if there are entries for today in each history
+  // Check if there are entries for today in each history - real-time check
   const hasTodayMorning = morningHistory.some((entry: any) => 
     new Date(entry.date).toDateString() === today
   )
@@ -35,31 +27,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const hasTodayNight = nightHistory.some((entry: any) => 
     new Date(entry.date).toDateString() === today
   )
-
-
-
-  // Use actual data presence for display (real-time check)
-  const currentDayCheckins = {
-    morning: hasTodayMorning,
-    midday: hasTodayMidday,
-    night: hasTodayNight,
-    date: today
-  }
-
-  // Sync the todayCheckins state with actual data presence
-  useEffect(() => {
-    if (hasTodayMorning !== todayCheckins.morning || 
-        hasTodayMidday !== todayCheckins.midday || 
-        hasTodayNight !== todayCheckins.night ||
-        todayCheckins.date !== today) {
-      setTodayCheckins({
-        morning: hasTodayMorning,
-        midday: hasTodayMidday,
-        night: hasTodayNight,
-        date: today
-      })
-    }
-  }, [hasTodayMorning, hasTodayMidday, hasTodayNight, today, todayCheckins, setTodayCheckins])
 
   const getCurrentHealthScore = () => {
     const todayEntry = morningHistory.find((entry: any) => 

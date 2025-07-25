@@ -34,31 +34,8 @@ const moodEmojis = [
 export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps) {
   const [middayHistory, setMiddayHistory] = useKV('midday-history', [])
 
-  const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
-    morning: false,
-    midday: false,
-    night: false,
-    date: new Date().toDateString()
-  })
-
-  // Get today's existing data if any
+  // Get today's date  
   const today = new Date().toDateString()
-  
-  // Check if we have an entry for today
-  const hasTodayMidday = middayHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
-  
-  // Reset checkins for new day
-  useEffect(() => {
-    if (todayCheckins.date !== today) {
-      setTodayCheckins((prev: any) => ({
-        ...prev,
-        midday: hasTodayMidday,
-        date: today
-      }))
-    }
-  }, [today, todayCheckins.date, hasTodayMidday, setTodayCheckins])
   
   const [existingEntry] = middayHistory.filter((entry: any) => 
     new Date(entry.date).toDateString() === today
@@ -117,17 +94,6 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
         new Date(entry.date).toDateString() !== today
       )
       return [newEntry, ...filteredHistory]
-    })
-    
-    // Mark midday as complete for today - use functional update
-    setTodayCheckins((prev: any) => {
-      const updatedCheckins = {
-        ...prev,
-        midday: true,
-        date: today
-      }
-      console.log('Setting midday complete:', updatedCheckins)
-      return updatedCheckins
     })
     
     onComplete()

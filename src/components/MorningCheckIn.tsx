@@ -42,32 +42,8 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   const [morningHistory, setMorningHistory] = useKV('morning-history', [])
   const [dailyQuestions, setDailyQuestions] = useKV('daily-questions', [])
 
-  const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
-    morning: false,
-    midday: false,
-    night: false,
-    date: new Date().toDateString()
-  })
-
-  // Get today's existing data if any
+  // Get today's date
   const today = new Date().toDateString()
-  
-  // Check if we have an entry for today
-  const hasTodayMorning = morningHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
-  
-  // Reset checkins for new day
-  useEffect(() => {
-    if (todayCheckins.date !== today) {
-      setTodayCheckins({
-        morning: hasTodayMorning,
-        midday: false,
-        night: false,
-        date: today
-      })
-    }
-  }, [today, todayCheckins.date, hasTodayMorning, setTodayCheckins])
   
   const [existingEntry] = morningHistory.filter((entry: any) => 
     new Date(entry.date).toDateString() === today
@@ -257,17 +233,6 @@ Make each question unique and meaningful for health tracking.`
           new Date(entry.date).toDateString() !== today
         )
         return [newEntry, ...filteredHistory]
-      })
-      
-      // Mark morning as complete for today - use functional update
-      setTodayCheckins((prev: any) => {
-        const updatedCheckins = {
-          ...prev,
-          morning: true,
-          date: today
-        }
-        console.log('Setting morning complete:', updatedCheckins)
-        return updatedCheckins
       })
       
       onComplete()

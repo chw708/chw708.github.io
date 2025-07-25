@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Heart, Sun, Moon, Bowl } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,17 +12,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])
   
-  const [todayData, setTodayData] = useKV('today-checkins', {
-    morning: false,
-    midday: false,
-    night: false,
-    date: new Date().toDateString()
-  })
-
   const currentDate = new Date().toDateString()
-  const isToday = todayData.date === currentDate
 
-  // Check actual data presence for today
+  // Check actual data presence for today - real-time
   const hasTodayMorning = morningHistory.some((entry: any) => 
     new Date(entry.date).toDateString() === currentDate
   )
@@ -34,33 +25,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     new Date(entry.date).toDateString() === currentDate
   )
 
-  // Reset checkins if we're on a new day using useEffect
-  useEffect(() => {
-    if (!isToday) {
-      setTodayData({
-        morning: hasTodayMorning,
-        midday: hasTodayMidday,
-        night: hasTodayNight,
-        date: currentDate
-      })
-    }
-  }, [currentDate, isToday, hasTodayMorning, hasTodayMidday, hasTodayNight, setTodayData])
-
-  // Use actual data presence for display
-  const currentDayData = {
-    morning: hasTodayMorning,
-    midday: hasTodayMidday,
-    night: hasTodayNight,
-    date: currentDate
-  }
-
   const checkInButtons = [
     {
       id: 'morning',
       icon: Sun,
       title: 'Morning Check-In',
       subtitle: 'Start your day with a wellness check',
-      completed: currentDayData.morning,
+      completed: hasTodayMorning,
       color: 'bg-yellow-50 border-yellow-200 text-yellow-800'
     },
     {
@@ -68,7 +39,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       icon: Bowl,
       title: 'Midday Log',
       subtitle: 'Record your meals and mood',
-      completed: currentDayData.midday,
+      completed: hasTodayMidday,
       color: 'bg-orange-50 border-orange-200 text-orange-800'
     },
     {
@@ -76,7 +47,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       icon: Moon,
       title: 'Night Reflection',
       subtitle: 'Reflect on your day with AI support',
-      completed: currentDayData.night,
+      completed: hasTodayNight,
       color: 'bg-purple-50 border-purple-200 text-purple-800'
     }
   ]
