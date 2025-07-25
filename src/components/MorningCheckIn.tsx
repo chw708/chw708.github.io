@@ -417,7 +417,7 @@ Make sure each question explores a completely different health aspect than recen
               step="0.1"
               value={data.weight || ''}
               onChange={(e) => setData({...data, weight: parseFloat(e.target.value) || null})}
-              placeholder="lbs or kg"
+              placeholder="kg"
               className="text-lg p-4 text-center"
             />
             <p className="text-sm text-muted-foreground text-center">

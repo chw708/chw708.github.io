@@ -357,7 +357,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                             entry.weight && (
                               <div key={index} className="flex justify-between text-sm">
                                 <span>{new Date(entry.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
-                                <span className="font-medium">{entry.weight} lbs</span>
+                                <span className="font-medium">{entry.weight} kg</span>
                               </div>
                             )
                           )}
