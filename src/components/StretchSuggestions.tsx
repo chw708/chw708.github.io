@@ -71,20 +71,38 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
     const today = new Date()
     const dayOfYear = Math.floor(today.getTime() / (1000 * 60 * 60 * 24))
     
-    // Create unique hash for each body area
+    // Create unique hash for each body area using stronger hashing
     const areaCode = area.split('').reduce((hash, char, index) => {
       return hash + char.charCodeAt(0) * (index + 1) * 47  // Use prime number
     }, 0)
     
-    // Add area index to ensure different selections for different areas
-    const uniqueSeed = (dayOfYear * 31 + areaCode * 17 + areaIndex * 97) % stretches.length
+    // Add area index multiplied by a different prime to ensure different selections
+    const uniqueSeed = (dayOfYear * 31 + areaCode * 17 + areaIndex * 137) % stretches.length
     
     const selectedStretch = stretches[uniqueSeed]
     
     return { area, stretch: selectedStretch }
   })
 
-  if (relevantStretches.length === 0) {
+  // Additional check to ensure no duplicate stretches across different areas
+  const usedStretches = new Set()
+  const finalStretches = relevantStretches.map((item, index) => {
+    const stretches = stretchDatabase[item.area]
+    let selectedStretch = item.stretch
+    let attempt = 0
+    
+    // If stretch is already used, try to find a different one
+    while (usedStretches.has(selectedStretch) && attempt < stretches.length) {
+      const newIndex = (stretches.indexOf(selectedStretch) + 1 + attempt) % stretches.length
+      selectedStretch = stretches[newIndex]
+      attempt++
+    }
+    
+    usedStretches.add(selectedStretch)
+    return { area: item.area, stretch: selectedStretch }
+  })
+
+  if (finalStretches.length === 0) {
     return null
   }
 
@@ -92,7 +110,7 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-center">Recommended Stretches</h3>
       <div className="space-y-3">
-        {relevantStretches.map((item, index) => (
+        {finalStretches.map((item, index) => (
           <div key={`${item.area}-${index}`} className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
             <h4 className="font-medium text-accent-foreground mb-1">{item.area}</h4>
             <p className="text-sm text-muted-foreground">{item.stretch}</p>

@@ -310,15 +310,19 @@ Make sure each question explores a completely different health aspect than recen
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1)
     } else {
-      // Complete check-in
+      // Complete check-in - follow exact same pattern as night reflection
       const healthScore = calculateHealthScore(data)
       const advice = getHealthAdvice(healthScore, data)
       
-      const newEntry = {
-        date: today, // Use consistent date format
+      const finalData = {
         ...data,
         healthScore,
-        advice,
+        advice
+      }
+      
+      const newEntry = {
+        date: today, // Use consistent date format
+        ...finalData,
         completedAt: new Date().toISOString()
       }
       
@@ -328,6 +332,7 @@ Make sure each question explores a completely different health aspect than recen
         return [newEntry, ...filteredHistory]
       })
       
+      setData(finalData)
       onComplete()
     }
   }

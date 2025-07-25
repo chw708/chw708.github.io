@@ -94,6 +94,7 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
       return [newEntry, ...filteredHistory]
     })
     
+    setData(data) // Follow same pattern as night reflection
     onComplete()
   }
 
