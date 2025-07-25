@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useKV } from '@github/spark/hooks'
+import { useLanguage } from '../contexts/LanguageContext'
 import { getTodayDateString, isToday } from '@/lib/utils'
 import HealthScore from './HealthScore'
 
@@ -12,6 +13,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
+  const { t } = useLanguage()
   const [morningHistory] = useKV('morning-history', [])
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])

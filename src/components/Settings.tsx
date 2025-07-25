@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { ArrowLeft, User, Bell, Shield, Download } from '@phosphor-icons/react'
+import { ArrowLeft, User, Bell, Shield, Download, Globe } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useKV } from '@github/spark/hooks'
+import { useLanguage } from '../contexts/LanguageContext'
 import { toast } from 'sonner'
 
 interface SettingsProps {
@@ -13,6 +15,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
+  const { language, setLanguage, t } = useLanguage()
   const [userProfile, setUserProfile] = useKV('user-profile', {
     name: '',
     age: null,
@@ -32,7 +35,7 @@ export default function Settings({ onBack }: SettingsProps) {
 
   const handleSaveProfile = () => {
     setUserProfile(tempProfile)
-    toast.success('Profile updated successfully')
+    toast.success(t('common.success'))
   }
 
   const handleExportData = async () => {
@@ -59,22 +62,22 @@ export default function Settings({ onBack }: SettingsProps) {
       linkElement.setAttribute('download', exportFileDefaultName)
       linkElement.click()
       
-      toast.success('Data exported successfully')
+      toast.success(t('common.success'))
     } catch (error) {
-      toast.error('Failed to export data')
+      toast.error(t('common.error'))
     }
   }
 
   const handleClearData = async () => {
-    if (confirm('Are you sure you want to clear all your health data? This cannot be undone.')) {
+    if (confirm(t('common.confirm') + ' ' + t('settings.clearData'))) {
       try {
         await spark.kv.delete('morning-history')
         await spark.kv.delete('midday-history')
         await spark.kv.delete('night-history')
         await spark.kv.delete('today-checkins')
-        toast.success('All health data cleared')
+        toast.success(t('common.success'))
       } catch (error) {
-        toast.error('Failed to clear data')
+        toast.error(t('common.error'))
       }
     }
   }
@@ -93,46 +96,70 @@ export default function Settings({ onBack }: SettingsProps) {
             <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold">Settings</h1>
-            <p className="text-sm text-primary-foreground/80">Manage your preferences</p>
+            <h1 className="text-lg font-semibold">{t('settings.title')}</h1>
+            <p className="text-sm text-primary-foreground/80">{t('settings.subtitle')}</p>
           </div>
         </div>
       </div>
 
       <div className="px-6 py-6 space-y-6">
+        {/* Language Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe size={20} />
+              {t('settings.language')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="language">{t('settings.selectLanguage')}</Label>
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-full mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{t('settings.english')}</SelectItem>
+                  <SelectItem value="ko">{t('settings.korean')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Profile Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User size={20} />
-              Personal Information
+              {t('settings.personalInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t('settings.name')}</Label>
                 <Input
                   id="name"
                   value={tempProfile.name}
                   onChange={(e) => setTempProfile(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Your name"
+                  placeholder={t('settings.name')}
                 />
               </div>
               <div>
-                <Label htmlFor="age">Age</Label>
+                <Label htmlFor="age">{t('settings.age')}</Label>
                 <Input
                   id="age"
                   type="number"
                   value={tempProfile.age || ''}
                   onChange={(e) => setTempProfile(prev => ({ ...prev, age: parseInt(e.target.value) || null }))}
-                  placeholder="Age"
+                  placeholder={t('settings.age')}
                 />
               </div>
             </div>
             
             <div>
-              <Label htmlFor="email">Email (optional)</Label>
+              <Label htmlFor="email">{t('settings.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -143,17 +170,17 @@ export default function Settings({ onBack }: SettingsProps) {
             </div>
             
             <div>
-              <Label htmlFor="emergency">Emergency Contact (optional)</Label>
+              <Label htmlFor="emergency">{t('settings.emergencyContact')}</Label>
               <Input
                 id="emergency"
                 value={tempProfile.emergencyContact}
                 onChange={(e) => setTempProfile(prev => ({ ...prev, emergencyContact: e.target.value }))}
-                placeholder="Name and phone number"
+                placeholder={t('settings.emergencyContact')}
               />
             </div>
             
             <Button onClick={handleSaveProfile} className="w-full">
-              Save Profile
+              {t('settings.saveProfile')}
             </Button>
           </CardContent>
         </Card>
@@ -163,13 +190,13 @@ export default function Settings({ onBack }: SettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell size={20} />
-              Notifications
+              {t('settings.notifications')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Morning Check-in Reminder</p>
+                <p className="font-medium">{t('settings.morningReminder')}</p>
                 <p className="text-sm text-muted-foreground">Daily at 8:00 AM</p>
               </div>
               <Switch
@@ -180,7 +207,7 @@ export default function Settings({ onBack }: SettingsProps) {
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Midday Meal Reminder</p>
+                <p className="font-medium">{t('settings.middayReminder')}</p>
                 <p className="text-sm text-muted-foreground">Daily at 1:00 PM</p>
               </div>
               <Switch
@@ -191,7 +218,7 @@ export default function Settings({ onBack }: SettingsProps) {
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Night Reflection Reminder</p>
+                <p className="font-medium">{t('settings.nightReminder')}</p>
                 <p className="text-sm text-muted-foreground">Daily at 8:00 PM</p>
               </div>
               <Switch
@@ -202,7 +229,7 @@ export default function Settings({ onBack }: SettingsProps) {
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Weekly Insights</p>
+                <p className="font-medium">{t('settings.weeklyInsights')}</p>
                 <p className="text-sm text-muted-foreground">Sunday mornings</p>
               </div>
               <Switch
@@ -218,7 +245,7 @@ export default function Settings({ onBack }: SettingsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield size={20} />
-              Data Management
+              {t('settings.dataManagement')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -228,11 +255,11 @@ export default function Settings({ onBack }: SettingsProps) {
               className="w-full justify-start gap-2"
             >
               <Download size={16} />
-              Export My Data
+              {t('settings.exportData')}
             </Button>
             
             <div className="p-4 bg-muted rounded-lg">
-              <h4 className="font-medium mb-2">Privacy & Security</h4>
+              <h4 className="font-medium mb-2">{t('settings.privacy')}</h4>
               <p className="text-sm text-muted-foreground mb-3">
                 Your health data is stored securely on your device. Teresa Health does not share your personal information with third parties.
               </p>
@@ -249,7 +276,7 @@ export default function Settings({ onBack }: SettingsProps) {
               onClick={handleClearData}
               className="w-full"
             >
-              Clear All Data
+              {t('settings.clearData')}
             </Button>
           </CardContent>
         </Card>
@@ -257,9 +284,9 @@ export default function Settings({ onBack }: SettingsProps) {
         {/* App Information */}
         <Card>
           <CardContent className="p-4 text-center">
-            <h3 className="font-semibold mb-2">Teresa Health</h3>
+            <h3 className="font-semibold mb-2">{t('home.title')}</h3>
             <p className="text-sm text-muted-foreground mb-2">
-              Your Daily Health Companion
+              {t('home.subtitle')}
             </p>
             <p className="text-xs text-muted-foreground">
               Version 1.0.0 • Made with ❤️ for your wellbeing

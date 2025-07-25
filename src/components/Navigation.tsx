@@ -1,5 +1,6 @@
 import { Heart, House, ChartLine, Settings, Info, Question } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface NavigationProps {
   currentPage: string
@@ -7,11 +8,13 @@ interface NavigationProps {
 }
 
 export default function Navigation({ currentPage, onNavigate }: NavigationProps) {
+  const { t } = useLanguage()
+  
   const navItems = [
-    { id: 'home', icon: House, label: 'Home' },
-    { id: 'dashboard', icon: ChartLine, label: 'Dashboard' },
-    { id: 'about', icon: Info, label: 'About' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
+    { id: 'home', icon: House, label: t('navigation.home') },
+    { id: 'dashboard', icon: ChartLine, label: t('navigation.dashboard') },
+    { id: 'about', icon: Info, label: t('navigation.about') },
+    { id: 'settings', icon: Settings, label: t('navigation.settings') },
   ]
 
   return (

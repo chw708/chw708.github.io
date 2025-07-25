@@ -2,6 +2,7 @@ import { Heart, Sun, Moon, Bowl } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useKV } from '@github/spark/hooks'
+import { useLanguage } from '../contexts/LanguageContext'
 import { getTodayDateString, isToday } from '@/lib/utils'
 
 interface HomePageProps {
@@ -9,6 +10,7 @@ interface HomePageProps {
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
+  const { t } = useLanguage()
   const [morningHistory] = useKV('morning-history', [])
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])
@@ -24,7 +26,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     {
       id: 'morning',
       icon: Sun,
-      title: 'Morning Check-In',
+      title: t('home.morningCheckin'),
       subtitle: 'Start your day with a wellness check',
       completed: hasTodayMorning,
       color: 'bg-yellow-50 border-yellow-200 text-yellow-800'
@@ -32,7 +34,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     {
       id: 'midday', 
       icon: Bowl,
-      title: 'Midday Log',
+      title: t('home.middayLog'),
       subtitle: 'Record your meals and mood',
       completed: hasTodayMidday,
       color: 'bg-orange-50 border-orange-200 text-orange-800'
@@ -40,7 +42,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     {
       id: 'night',
       icon: Moon,
-      title: 'Night Reflection',
+      title: t('home.nightReflection'),
       subtitle: 'Reflect on your day with AI support',
       completed: hasTodayNight,
       color: 'bg-purple-50 border-purple-200 text-purple-800'
@@ -56,22 +58,22 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             <Heart size={24} weight="fill" className="text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Teresa Health</h1>
-            <p className="text-primary-foreground/80 text-sm">Your health, your habits</p>
+            <h1 className="text-2xl font-bold">{t('home.title')}</h1>
+            <p className="text-primary-foreground/80 text-sm">{t('home.slogan')}</p>
           </div>
         </div>
         
         <div className="bg-primary-foreground/10 rounded-xl p-4">
-          <p className="text-primary-foreground/90 text-sm mb-2">Welcome back!</p>
+          <p className="text-primary-foreground/90 text-sm mb-2">{t('home.welcomeBack')}</p>
           <p className="text-primary-foreground font-medium">
-            How are you feeling today? Let's check in together.
+            {t('home.feelingToday')}
           </p>
         </div>
       </div>
 
       {/* Check-in Cards */}
       <div className="px-6 py-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Daily Check-ins</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t('home.dailyCheckins')}</h2>
         
         {checkInButtons.map((checkIn) => {
           const Icon = checkIn.icon
@@ -94,7 +96,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                         <h3 className="font-medium text-foreground">{checkIn.title}</h3>
                         {checkIn.completed && (
                           <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                            ✓ Done Today
+                            {t('home.doneToday')}
                           </div>
                         )}
                       </div>
@@ -110,7 +112,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
       {/* Quick Actions */}
       <div className="px-6 py-4">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t('home.quickActions')}</h2>
         
         <div className="grid grid-cols-2 gap-3">
           <Button
@@ -118,8 +120,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             onClick={() => onNavigate('dashboard')}
             className="h-auto py-4 flex flex-col gap-2"
           >
-            <span className="font-medium">View Progress</span>
-            <span className="text-xs text-muted-foreground">See your health trends</span>
+            <span className="font-medium">{t('home.viewProgress')}</span>
+            <span className="text-xs text-muted-foreground">{t('home.seeHealthTrends')}</span>
           </Button>
           
           <Button
@@ -127,8 +129,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             onClick={() => onNavigate('about')}
             className="h-auto py-4 flex flex-col gap-2"
           >
-            <span className="font-medium">Learn More</span>
-            <span className="text-xs text-muted-foreground">About Teresa Health</span>
+            <span className="font-medium">{t('home.learnMore')}</span>
+            <span className="text-xs text-muted-foreground">{t('home.aboutApp')}</span>
           </Button>
         </div>
       </div>
