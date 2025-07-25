@@ -8,7 +8,7 @@ interface HomePageProps {
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
-  const [todayData] = useKV('today-checkins', {
+  const [todayData, setTodayData] = useKV('today-checkins', {
     morning: false,
     midday: false,
     night: false,
@@ -17,6 +17,16 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   const currentDate = new Date().toDateString()
   const isToday = todayData.date === currentDate
+
+  // Reset checkins if we're on a new day
+  if (!isToday) {
+    setTodayData({
+      morning: false,
+      midday: false,
+      night: false,
+      date: currentDate
+    })
+  }
 
   const checkInButtons = [
     {
@@ -79,8 +89,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <CardContent className="p-0">
                 <Button
                   variant="ghost"
-                  onClick={() => onNavigate(checkIn.id)}
-                  className="w-full h-auto p-4 justify-start text-left hover:bg-accent/50"
+                  onClick={() => !checkIn.completed && onNavigate(checkIn.id)}
+                  disabled={checkIn.completed}
+                  className="w-full h-auto p-4 justify-start text-left hover:bg-accent/50 disabled:opacity-60"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-full ${checkIn.color}`}>

@@ -49,6 +49,31 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
 
   const [morningHistory, setMorningHistory] = useKV('morning-history', [])
 
+  // Check if morning check-in already completed today
+  const today = new Date().toDateString()
+  const alreadyCompleted = todayCheckins.date === today && todayCheckins.morning
+
+  if (alreadyCompleted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <div className="bg-green-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Heart size={32} className="text-green-600" weight="fill" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Already Complete!</h2>
+            <p className="text-muted-foreground mb-6">
+              You've already completed your morning check-in today. Come back tomorrow for your next check-in.
+            </p>
+            <Button onClick={onBack} className="w-full">
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const calculateHealthScore = (data: MorningData): number => {
     let score = 100
     
@@ -119,11 +144,24 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       }
       
       setMorningHistory((prev: any[]) => [newEntry, ...prev])
-      setTodayCheckins((prev: any) => ({
-        ...prev,
-        morning: true,
-        date: new Date().toDateString()
-      }))
+      
+      // Reset checkins if it's a new day, then mark morning as complete
+      const today = new Date().toDateString()
+      setTodayCheckins((prev: any) => {
+        if (prev.date !== today) {
+          return {
+            morning: true,
+            midday: false,
+            night: false,
+            date: today
+          }
+        }
+        return {
+          ...prev,
+          morning: true,
+          date: today
+        }
+      })
       
       onComplete()
     }
@@ -140,7 +178,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   const canProceed = () => {
     switch (currentStep) {
       case 0: return data.sleep !== null
-      case 1: return data.weight !== null
+      case 1: return true // weight is optional
       case 2: return true // swelling is boolean
       case 3: return data.fatigue !== null
       case 4: return data.stiffness.length > 0

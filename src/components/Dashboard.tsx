@@ -14,12 +14,26 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [morningHistory] = useKV('morning-history', [])
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])
-  const [todayCheckins] = useKV('today-checkins', {
+  const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
     morning: false,
     midday: false,
     night: false,
     date: new Date().toDateString()
   })
+
+  // Ensure today's checkins are properly initialized for the current date
+  const today = new Date().toDateString()
+  const isToday = todayCheckins.date === today
+
+  // Reset checkins if we're on a new day
+  if (!isToday) {
+    setTodayCheckins({
+      morning: false,
+      midday: false,
+      night: false,
+      date: today
+    })
+  }
 
   const getCurrentHealthScore = () => {
     if (morningHistory.length > 0) {
@@ -99,7 +113,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const insights = getWeeklyInsights()
   const todayQuote = getLatestQuote()
 
-  const isToday = todayCheckins.date === new Date().toDateString()
+  const completedCount = (isToday && todayCheckins.morning ? 1 : 0) + 
+                       (isToday && todayCheckins.midday ? 1 : 0) + 
+                       (isToday && todayCheckins.night ? 1 : 0)
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,7 +141,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
           <p className="text-primary-foreground/80 text-xs mt-2">
             {isToday ? 
-              `${Object.values(todayCheckins).filter(Boolean).length - 1}/3 completed today` :
+              `${completedCount}/3 completed today` :
               'Start your daily check-ins'
             }
           </p>
