@@ -118,6 +118,13 @@ Focus on diverse health aspects like:
 - Circulation feelings (tingling, warmth)
 - Seasonal health considerations
 - Emotional readiness for the day
+- Muscle tension or relaxation
+- Coordination and fine motor skills
+- Alertness and mental focus
+- Comfort with lighting/brightness
+- Headache or sinus pressure
+- Throat comfort
+- Overall body comfort
 
 Generate questions that are:
 - Completely unique from recent days

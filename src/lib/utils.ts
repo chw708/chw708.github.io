@@ -7,14 +7,17 @@ export function cn(...inputs: ClassValue[]) {
 
 // Utility function to get today's date string consistently across the app
 export function getTodayDateString(): string {
-  return new Date().toDateString()
+  const today = new Date()
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 }
 
 // Utility function to check if a date is today
 export function isToday(dateString: string): boolean {
-  const today = new Date().toDateString()
-  const checkDate = new Date(dateString).toDateString()
-  return today === checkDate
+  const today = getTodayDateString()
+  // Handle both the old format (from toDateString()) and new format (YYYY-MM-DD)
+  const checkDate = new Date(dateString)
+  const checkDateFormatted = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`
+  return today === checkDateFormatted
 }
 
 // Utility function to check if check-ins have been reset for the current day

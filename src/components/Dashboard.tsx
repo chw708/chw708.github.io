@@ -18,7 +18,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   // Get today's date
   const today = getTodayDateString()
 
-  // Check if there are entries for today in each history - real-time check
+  // Check if there are entries for today in each history - more robust checking
   const hasTodayMorning = morningHistory.some((entry: any) => isToday(entry.date))
   const hasTodayMidday = middayHistory.some((entry: any) => isToday(entry.date))
   const hasTodayNight = nightHistory.some((entry: any) => isToday(entry.date))
