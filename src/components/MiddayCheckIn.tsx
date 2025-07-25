@@ -105,23 +105,13 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
     
     setMiddayHistory((prev: any[]) => [newEntry, ...prev])
     
-    // Reset checkins if it's a new day, then mark midday as complete
+    // Mark midday as complete for today
     const today = new Date().toDateString()
-    setTodayCheckins((prev: any) => {
-      if (prev.date !== today) {
-        return {
-          morning: false,
-          midday: true,
-          night: false,
-          date: today
-        }
-      }
-      return {
-        ...prev,
-        midday: true,
-        date: today
-      }
-    })
+    setTodayCheckins((prev: any) => ({
+      ...prev,
+      midday: true,
+      date: today
+    }))
     
     onComplete()
   }

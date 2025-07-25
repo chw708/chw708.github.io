@@ -145,23 +145,13 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       
       setMorningHistory((prev: any[]) => [newEntry, ...prev])
       
-      // Reset checkins if it's a new day, then mark morning as complete
+      // Mark morning as complete for today
       const today = new Date().toDateString()
-      setTodayCheckins((prev: any) => {
-        if (prev.date !== today) {
-          return {
-            morning: true,
-            midday: false,
-            night: false,
-            date: today
-          }
-        }
-        return {
-          ...prev,
-          morning: true,
-          date: today
-        }
-      })
+      setTodayCheckins((prev: any) => ({
+        ...prev,
+        morning: true,
+        date: today
+      }))
       
       onComplete()
     }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, TrendUp, Heart, Calendar, Target } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,14 +25,24 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const today = new Date().toDateString()
   const isToday = todayCheckins.date === today
 
-  // Reset checkins if we're on a new day
-  if (!isToday) {
-    setTodayCheckins({
-      morning: false,
-      midday: false,
-      night: false,
-      date: today
-    })
+  // Use effect to reset checkins for new day
+  useEffect(() => {
+    if (!isToday) {
+      setTodayCheckins({
+        morning: false,
+        midday: false,
+        night: false,
+        date: today
+      })
+    }
+  }, [today, isToday, setTodayCheckins])
+
+  // Use current day checkins for display
+  const currentDayCheckins = isToday ? todayCheckins : {
+    morning: false,
+    midday: false,
+    night: false,
+    date: today
   }
 
   const getCurrentHealthScore = () => {
@@ -113,9 +123,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const insights = getWeeklyInsights()
   const todayQuote = getLatestQuote()
 
-  const completedCount = (isToday && todayCheckins.morning ? 1 : 0) + 
-                       (isToday && todayCheckins.midday ? 1 : 0) + 
-                       (isToday && todayCheckins.night ? 1 : 0)
+  const completedCount = (currentDayCheckins.morning ? 1 : 0) + 
+                       (currentDayCheckins.midday ? 1 : 0) + 
+                       (currentDayCheckins.night ? 1 : 0)
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,15 +145,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <div className="bg-primary-foreground/10 rounded-xl p-4">
           <h3 className="text-primary-foreground font-medium mb-3">Today's Check-ins</h3>
           <div className="flex gap-2">
-            <div className={`w-3 h-3 rounded-full ${isToday && todayCheckins.morning ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
-            <div className={`w-3 h-3 rounded-full ${isToday && todayCheckins.midday ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
-            <div className={`w-3 h-3 rounded-full ${isToday && todayCheckins.night ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
+            <div className={`w-3 h-3 rounded-full ${currentDayCheckins.morning ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
+            <div className={`w-3 h-3 rounded-full ${currentDayCheckins.midday ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
+            <div className={`w-3 h-3 rounded-full ${currentDayCheckins.night ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
           </div>
           <p className="text-primary-foreground/80 text-xs mt-2">
-            {isToday ? 
-              `${completedCount}/3 completed today` :
-              'Start your daily check-ins'
-            }
+            {`${completedCount}/3 completed today`}
           </p>
         </div>
       </div>
@@ -179,7 +186,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {isToday && todayCheckins.morning && morningHistory.length > 0 && (
+                {currentDayCheckins.morning && morningHistory.length > 0 && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm font-medium text-green-800">Morning Check-in Complete</p>
                     <p className="text-xs text-green-600">
@@ -188,7 +195,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
                 
-                {isToday && todayCheckins.midday && middayHistory.length > 0 && (
+                {currentDayCheckins.midday && middayHistory.length > 0 && (
                   <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <p className="text-sm font-medium text-orange-800">Midday Log Complete</p>
                     <p className="text-xs text-orange-600">
@@ -197,7 +204,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
                 
-                {isToday && todayCheckins.night && nightHistory.length > 0 && (
+                {currentDayCheckins.night && nightHistory.length > 0 && (
                   <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <p className="text-sm font-medium text-purple-800">Night Reflection Complete</p>
                     <p className="text-xs text-purple-600">
@@ -206,7 +213,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
 
-                {(!isToday || (!todayCheckins.morning && !todayCheckins.midday && !todayCheckins.night)) && (
+                {completedCount === 0 && (
                   <p className="text-muted-foreground text-center py-4">
                     No check-ins completed today yet. Start with your morning check-in!
                   </p>
@@ -321,7 +328,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <CardTitle>Recommended Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {!isToday || !todayCheckins.morning ? (
+                {!currentDayCheckins.morning ? (
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('morning')}
@@ -331,7 +338,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </Button>
                 ) : null}
                 
-                {!isToday || !todayCheckins.midday ? (
+                {!currentDayCheckins.midday ? (
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('midday')}
@@ -341,7 +348,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </Button>
                 ) : null}
                 
-                {!isToday || !todayCheckins.night ? (
+                {!currentDayCheckins.night ? (
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('night')}

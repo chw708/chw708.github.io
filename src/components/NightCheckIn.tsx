@@ -182,23 +182,13 @@ Create a supportive summary that acknowledges their experiences and ends on a ho
     
     setNightHistory((prev: any[]) => [newEntry, ...prev])
     
-    // Reset checkins if it's a new day, then mark night as complete
+    // Mark night as complete for today
     const today = new Date().toDateString()
-    setTodayCheckins((prev: any) => {
-      if (prev.date !== today) {
-        return {
-          morning: false,
-          midday: false,
-          night: true,
-          date: today
-        }
-      }
-      return {
-        ...prev,
-        night: true,
-        date: today
-      }
-    })
+    setTodayCheckins((prev: any) => ({
+      ...prev,
+      night: true,
+      date: today
+    }))
     
     setData(finalData)
     setCurrentStep(4) // Show summary

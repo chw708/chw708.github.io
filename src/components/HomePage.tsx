@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Heart, Sun, Moon, Bowl } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,14 +19,24 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const currentDate = new Date().toDateString()
   const isToday = todayData.date === currentDate
 
-  // Reset checkins if we're on a new day
-  if (!isToday) {
-    setTodayData({
-      morning: false,
-      midday: false,
-      night: false,
-      date: currentDate
-    })
+  // Reset checkins if we're on a new day using useEffect
+  useEffect(() => {
+    if (!isToday) {
+      setTodayData({
+        morning: false,
+        midday: false,
+        night: false,
+        date: currentDate
+      })
+    }
+  }, [currentDate, isToday, setTodayData])
+
+  // Use current state for display
+  const currentDayData = isToday ? todayData : {
+    morning: false,
+    midday: false,
+    night: false,
+    date: currentDate
   }
 
   const checkInButtons = [
@@ -34,7 +45,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       icon: Sun,
       title: 'Morning Check-In',
       subtitle: 'Start your day with a wellness check',
-      completed: isToday && todayData.morning,
+      completed: currentDayData.morning,
       color: 'bg-yellow-50 border-yellow-200 text-yellow-800'
     },
     {
@@ -42,7 +53,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       icon: Bowl,
       title: 'Midday Log',
       subtitle: 'Record your meals and mood',
-      completed: isToday && todayData.midday,
+      completed: currentDayData.midday,
       color: 'bg-orange-50 border-orange-200 text-orange-800'
     },
     {
@@ -50,7 +61,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       icon: Moon,
       title: 'Night Reflection',
       subtitle: 'Reflect on your day with AI support',
-      completed: isToday && todayData.night,
+      completed: currentDayData.night,
       color: 'bg-purple-50 border-purple-200 text-purple-800'
     }
   ]
