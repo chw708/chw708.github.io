@@ -101,59 +101,64 @@ ${recentQuestions ? `Recent questions used:\n- ${recentQuestions}` : 'No recent 
 
 AVOID these standard topics covered elsewhere: sleep duration, weight, fatigue level, body stiffness, blood pressure, blood sugar.
 
-Focus on diverse health aspects like:
-- Hydration levels and morning thirst
-- Appetite and digestive comfort
-- Balance, coordination, steadiness
+Focus on diverse health aspects that change daily. Use a wide variety like:
+- Hydration and thirst levels
+- Appetite and digestive sensations
+- Balance, stability, coordination
 - Breathing ease and respiratory comfort  
-- Temperature sensitivity (hot/cold feelings)
-- Joint flexibility and movement ease
+- Temperature sensitivity and circulation
+- Joint flexibility and movement quality
 - Mental clarity and cognitive sharpness
-- Eye comfort, vision clarity
-- Hearing quality
-- Skin sensations (dryness, itching, etc.)
-- Morning energy readiness
-- Physical comfort in positions
-- Minor symptom awareness
-- Circulation feelings (tingling, warmth)
-- Seasonal health considerations
-- Emotional readiness for the day
-- Muscle tension or relaxation
-- Coordination and fine motor skills
-- Alertness and mental focus
-- Comfort with lighting/brightness
-- Headache or sinus pressure
-- Throat comfort
-- Overall body comfort
-- Digestion and stomach comfort
-- Mood and emotional state
-- Breathing patterns
-- Posture comfort
-- Environmental sensitivity
-- Motivation and mental readiness
+- Eye comfort, vision, light sensitivity
+- Hearing clarity and ear comfort
+- Skin sensations (dryness, itching, temperature)
+- Morning energy readiness and motivation
+- Physical comfort in different positions
+- Minor symptom awareness (headaches, dizziness)
+- Circulation feelings (tingling, warmth, numbness)
+- Seasonal health considerations and weather sensitivity
+- Emotional readiness and mood upon waking
+- Muscle tension, relaxation, and comfort
+- Fine motor skills and dexterity
+- Alertness and mental focus capacity
+- Environmental comfort (lighting, sound, air quality)
+- Sinus pressure, nasal congestion
+- Throat comfort and voice clarity
+- Overall body comfort and physical well-being
+- Gastrointestinal comfort and digestion
+- Stress levels and anxiety upon waking
+- Breathing patterns and lung capacity
+- Posture comfort and spinal alignment
+- Weather/environmental sensitivity
+- Morning motivation and mental readiness
+- Hand/foot warmth and sensation
+- Dizziness or lightheadedness
+- Swallowing comfort
+- Overall sense of vitality
 
 Generate questions that are:
-- Completely unique from recent days
-- Simple, clear, and gentle in tone
-- Appropriate for elderly/health-conscious users
-- Focused on immediate morning sensations
-- Covering 4 different health dimensions each day
+- Completely unique from recent days (avoid ANY repetition)
+- Simple, clear, and gentle in tone suitable for all ages
+- Focused on immediate morning physical/mental sensations
+- Covering 4 completely different health dimensions each day
+- Culturally appropriate for Korean users and elderly populations
+- Practical and relevant to daily health monitoring
 
-Return a valid JSON array with exactly 4 questions:
+Return a valid JSON array with exactly 4 questions. Mix question types for variety:
 [
   {"id": "unique_${Date.now()}_1", "text": "Your question here", "type": "scale", "required": false},
-  {"id": "unique_${Date.now()}_2", "text": "Another question", "type": "multiple", "options": ["Option1", "Option2", "Option3"], "required": false},
+  {"id": "unique_${Date.now()}_2", "text": "Another question", "type": "multiple", "options": ["Option1", "Option2", "Option3", "Option4"], "required": false},
   {"id": "unique_${Date.now()}_3", "text": "Third question", "type": "boolean", "required": false},
   {"id": "unique_${Date.now()}_4", "text": "Fourth question", "type": "scale", "required": false}
 ]
 
-Available types:
-- "scale" (1-10 rating with descriptive anchors)
-- "boolean" (yes/no questions)
-- "text" (short free text)
-- "multiple" (select from provided options)
+Question types available:
+- "scale" (1-10 rating: 1=Poor/Low/Uncomfortable, 10=Excellent/High/Very Comfortable)
+- "boolean" (yes/no questions for simple binary responses)
+- "text" (short free text for descriptive responses)
+- "multiple" (select from 3-4 specific options that cover the range of responses)
 
-Make sure each question explores a completely different health aspect than recent days and from each other within the same day.`
+Ensure each of the 4 questions targets a completely different health aspect and uses varied question types for engagement.`
         
         const response = await spark.llm(prompt, "gpt-4o-mini", true)
         const questions = JSON.parse(response)
@@ -167,7 +172,7 @@ Make sure each question explores a completely different health aspect than recen
         setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 9)]) // Keep last 10 days
       } catch (error) {
         console.error('Failed to generate questions:', error)
-        // More varied fallback questions - 4 questions each set
+        // More varied fallback questions - 4 questions each set covering diverse health aspects
         const fallbackOptions = [
           [
             {
@@ -205,7 +210,7 @@ Make sure each question explores a completely different health aspect than recen
             },
             {
               id: `temperature_${Date.now() + 1}`,
-              text: "Are you feeling too warm, too cold, or just right?",
+              text: "How do you feel about the room temperature right now?",
               type: "multiple",
               options: ["Too warm", "Just right", "Too cold", "Variable"],
               required: false
@@ -226,9 +231,9 @@ Make sure each question explores a completely different health aspect than recen
           [
             {
               id: `circulation_${Date.now()}`,
-              text: "How do your hands and feet feel temperature-wise?",
+              text: "How do your hands and feet feel right now?",
               type: "multiple",
-              options: ["Warm and comfortable", "Slightly cool", "Cold", "Variable"],
+              options: ["Warm and comfortable", "Slightly cool", "Cold", "Tingling or numb"],
               required: false
             },
             {
@@ -246,6 +251,87 @@ Make sure each question explores a completely different health aspect than recen
             {
               id: `alertness_${Date.now() + 3}`,
               text: "Rate your mental alertness level right now",
+              type: "scale",
+              required: false
+            }
+          ],
+          [
+            {
+              id: `hearing_${Date.now()}`,
+              text: "How clear does your hearing feel this morning?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `dizziness_${Date.now() + 1}`,
+              text: "Are you experiencing any dizziness or lightheadedness?",
+              type: "boolean",
+              required: false
+            },
+            {
+              id: `motivation_${Date.now() + 2}`,
+              text: "How motivated do you feel to start your day?",
+              type: "multiple",
+              options: ["Very motivated", "Somewhat motivated", "Neutral", "Low motivation"],
+              required: false
+            },
+            {
+              id: `comfort_${Date.now() + 3}`,
+              text: "Rate your overall physical comfort level",
+              type: "scale",
+              required: false
+            }
+          ],
+          [
+            {
+              id: `headache_${Date.now()}`,
+              text: "Do you have any headache or head pressure?",
+              type: "boolean",
+              required: false
+            },
+            {
+              id: `stress_${Date.now() + 1}`,
+              text: "How would you rate your stress level upon waking?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `throat_${Date.now() + 2}`,
+              text: "How does your throat feel this morning?",
+              type: "multiple",
+              options: ["Normal and comfortable", "Slightly dry", "Sore or scratchy", "Very dry"],
+              required: false
+            },
+            {
+              id: `energy_${Date.now() + 3}`,
+              text: "Rate your sense of vitality and life energy",
+              type: "scale",
+              required: false
+            }
+          ],
+          [
+            {
+              id: `skin_${Date.now()}`,
+              text: "How does your skin feel this morning?",
+              type: "multiple",
+              options: ["Normal and comfortable", "Dry", "Itchy", "Sensitive"],
+              required: false
+            },
+            {
+              id: `posture_${Date.now() + 1}`,
+              text: "How comfortable do you feel when sitting or standing?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `nausea_${Date.now() + 2}`,
+              text: "Are you feeling any nausea or stomach uneasiness?",
+              type: "boolean",
+              required: false
+            },
+            {
+              id: `focus_${Date.now() + 3}`,
+              text: "Rate your ability to concentrate right now",
               type: "scale",
               required: false
             }
@@ -355,7 +441,8 @@ Make sure each question explores a completely different health aspect than recen
 
   const handleNext = () => {
     const todaysQuestions = getTodaysQuestions()
-    const totalSteps = 7 + todaysQuestions.length // Basic 7 steps + AI questions (now 4)
+    // Always expect 4 AI questions, even if they're still loading
+    const totalSteps = 7 + 4 // Basic 7 steps + 4 AI questions (fixed count)
     
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1)
@@ -380,8 +467,13 @@ Make sure each question explores a completely different health aspect than recen
       setMorningHistory((prev: any[]) => {
         const filteredHistory = prev.filter((entry: any) => !isToday(entry.date))
         const newHistory = [newEntry, ...filteredHistory]
-        console.log('Morning check-in saved:', newEntry)
-        console.log('Updated morning history:', newHistory)
+        console.log('=== MORNING CHECK-IN COMPLETION ===')
+        console.log('Today date string:', today)
+        console.log('Entry being saved:', newEntry)
+        console.log('Previous history length:', prev.length)
+        console.log('New history length:', newHistory.length)
+        console.log('New history first item:', newHistory[0])
+        console.log('================================')
         return newHistory
       })
       
@@ -404,7 +496,8 @@ Make sure each question explores a completely different health aspect than recen
 
   const canProceed = () => {
     const todaysQuestions = getTodaysQuestions()
-    const totalSteps = 7 + todaysQuestions.length // Now handles 4 AI questions
+    // Always expect 4 AI questions, even if still loading
+    const totalSteps = 7 + 4 // Fixed count for consistency
     
     switch (currentStep) {
       case 0: return data.sleep !== null
@@ -415,11 +508,15 @@ Make sure each question explores a completely different health aspect than recen
       case 5: return true // optional vitals
       case 6: return true // results
       default: 
-        // AI questions (steps 7+ for all 4 questions)
+        // AI questions (steps 7-10 for 4 questions)
         const questionIndex = currentStep - 7
-        if (questionIndex < todaysQuestions.length) {
-          const question = todaysQuestions[questionIndex]
-          return !question.required || data.additionalQuestions[question.id] !== undefined
+        if (questionIndex < 4) { // Always allow 4 questions
+          if (questionIndex < todaysQuestions.length) {
+            const question = todaysQuestions[questionIndex]
+            return !question.required || data.additionalQuestions[question.id] !== undefined
+          }
+          // If questions are still loading, allow proceeding
+          return true
         }
         return true
     }
@@ -615,9 +712,19 @@ Make sure each question explores a completely different health aspect than recen
         )
 
       default:
-        // Handle AI-generated questions (steps 7+)
+        // Handle AI-generated questions (steps 7-10 for 4 questions)
         const todaysQuestions = getTodaysQuestions()
         const questionIndex = currentStep - 7
+        
+        // Show loading state if questions are still being generated
+        if (questionIndex < 4 && questionIndex >= todaysQuestions.length) {
+          return (
+            <div className="space-y-4 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground">오늘의 맞춤 질문을 생성하고 있습니다...</p>
+            </div>
+          )
+        }
         
         if (questionIndex < todaysQuestions.length) {
           const question = todaysQuestions[questionIndex]
@@ -646,7 +753,7 @@ Make sure each question explores a completely different health aspect than recen
                     ))}
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    1 = Poor/Low • 10 = Excellent/High
+                    1 = 나쁨/낮음 • 10 = 매우 좋음/높음
                   </p>
                 </div>
               )}
@@ -662,7 +769,7 @@ Make sure each question explores a completely different health aspect than recen
                         additionalQuestions: { ...prev.additionalQuestions, [question.id]: true }
                       }))}
                     />
-                    <Label htmlFor="yes" className="text-base">Yes</Label>
+                    <Label htmlFor="yes" className="text-base">네</Label>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Checkbox
@@ -673,7 +780,7 @@ Make sure each question explores a completely different health aspect than recen
                         additionalQuestions: { ...prev.additionalQuestions, [question.id]: false }
                       }))}
                     />
-                    <Label htmlFor="no" className="text-base">No</Label>
+                    <Label htmlFor="no" className="text-base">아니오</Label>
                   </div>
                 </div>
               )}
@@ -685,7 +792,7 @@ Make sure each question explores a completely different health aspect than recen
                     ...prev,
                     additionalQuestions: { ...prev.additionalQuestions, [question.id]: e.target.value }
                   }))}
-                  placeholder="Your answer..."
+                  placeholder="답변을 입력하세요..."
                   className="text-lg p-4"
                 />
               )}
@@ -709,7 +816,7 @@ Make sure each question explores a completely different health aspect than recen
               )}
               
               {!question.required && (
-                <p className="text-sm text-muted-foreground">This question is optional</p>
+                <p className="text-sm text-muted-foreground">이 질문은 선택사항입니다</p>
               )}
             </div>
           )
@@ -722,7 +829,7 @@ Make sure each question explores a completely different health aspect than recen
   const getStepTitles = () => {
     const basicTitles = [
       'Sleep Duration',
-      'Weight Check',
+      'Weight Check', 
       'Swelling Check',
       'Energy Level',
       'Stiffness Areas',
@@ -730,8 +837,8 @@ Make sure each question explores a completely different health aspect than recen
       'Your Results'
     ]
     
-    const todaysQuestions = getTodaysQuestions()
-    const aiTitles = todaysQuestions.map((q, index) => `Daily Question ${index + 1}`)
+    // Always show 4 AI question titles, regardless of loading state
+    const aiTitles = ['맞춤 질문 1', '맞춤 질문 2', '맞춤 질문 3', '맞춤 질문 4']
     
     return [...basicTitles, ...aiTitles]
   }
