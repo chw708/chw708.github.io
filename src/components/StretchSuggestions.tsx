@@ -43,10 +43,12 @@ const stretchDatabase: Record<string, string[]> = {
 export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestionsProps) {
   const relevantStretches = stiffnessAreas
     .filter(area => area !== 'None' && stretchDatabase[area])
-    .map(area => {
+    .map((area, index) => {
       const stretches = stretchDatabase[area]
-      const randomStretch = stretches[Math.floor(Math.random() * stretches.length)]
-      return { area, stretch: randomStretch }
+      // Use a different approach to get varied stretches - use index modulo to ensure diversity
+      const stretchIndex = (index + Math.floor(Date.now() / (1000 * 60 * 60 * 24))) % stretches.length
+      const selectedStretch = stretches[stretchIndex]
+      return { area, stretch: selectedStretch }
     })
 
   if (relevantStretches.length === 0) {
@@ -58,7 +60,7 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
       <h3 className="text-lg font-semibold text-center">Recommended Stretches</h3>
       <div className="space-y-3">
         {relevantStretches.map((item, index) => (
-          <div key={index} className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
+          <div key={`${item.area}-${index}`} className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
             <h4 className="font-medium text-accent-foreground mb-1">{item.area}</h4>
             <p className="text-sm text-muted-foreground">{item.stretch}</p>
           </div>

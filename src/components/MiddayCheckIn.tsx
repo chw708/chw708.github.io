@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, Camera, Plus, X } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,6 +43,23 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
 
   // Get today's existing data if any
   const today = new Date().toDateString()
+  
+  // Check if we have an entry for today
+  const hasTodayMidday = middayHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
+  
+  // Reset checkins for new day
+  useEffect(() => {
+    if (todayCheckins.date !== today) {
+      setTodayCheckins((prev: any) => ({
+        ...prev,
+        midday: hasTodayMidday,
+        date: today
+      }))
+    }
+  }, [today, todayCheckins.date, hasTodayMidday, setTodayCheckins])
+  
   const [existingEntry] = middayHistory.filter((entry: any) => 
     new Date(entry.date).toDateString() === today
   )
@@ -102,12 +119,16 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
       return [newEntry, ...filteredHistory]
     })
     
-    // Mark midday as complete for today
-    setTodayCheckins((prev: any) => ({
-      ...prev,
-      midday: true,
-      date: today
-    }))
+    // Mark midday as complete for today - use functional update
+    setTodayCheckins((prev: any) => {
+      const updatedCheckins = {
+        ...prev,
+        midday: true,
+        date: today
+      }
+      console.log('Setting midday complete:', updatedCheckins)
+      return updatedCheckins
+    })
     
     onComplete()
   }

@@ -51,6 +51,24 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
 
   // Get today's existing data if any
   const today = new Date().toDateString()
+  
+  // Check if we have an entry for today
+  const hasTodayMorning = morningHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
+  
+  // Reset checkins for new day
+  useEffect(() => {
+    if (todayCheckins.date !== today) {
+      setTodayCheckins({
+        morning: hasTodayMorning,
+        midday: false,
+        night: false,
+        date: today
+      })
+    }
+  }, [today, todayCheckins.date, hasTodayMorning, setTodayCheckins])
+  
   const [existingEntry] = morningHistory.filter((entry: any) => 
     new Date(entry.date).toDateString() === today
   )
@@ -143,40 +161,44 @@ Make each question unique and meaningful for health tracking.`
 
   const getTodaysQuestions = (): DailyQuestion[] => {
     const todayQs = dailyQuestions.find((q: any) => q.date === today)
-    return todayQs?.questions || []
+    const questions = todayQs?.questions
+    // Ensure we always return an array
+    return Array.isArray(questions) ? questions : []
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 90 // Start with a higher base score to be less sensitive
+    let score = 85 // Start with a higher base score to be less sensitive
     
-    // Sleep score (0-15 points) - reduced penalty and more forgiving ranges
+    // Sleep score (0-10 points) - very forgiving ranges
     if (data.sleep !== null) {
-      if (data.sleep < 4 || data.sleep > 11) score -= 12
-      else if (data.sleep < 5.5 || data.sleep > 9.5) score -= 6
-      else if (data.sleep < 6.5 || data.sleep > 8.5) score -= 2
-      // 6.5-8.5 hours gets no penalty (more forgiving range)
+      if (data.sleep < 4 || data.sleep > 11) score -= 8
+      else if (data.sleep < 5 || data.sleep > 10) score -= 4
+      else if (data.sleep < 6 || data.sleep > 9) score -= 1
+      // 6-9 hours gets no penalty (very forgiving range)
     }
     
-    // Fatigue score (0-15 points) - much more forgiving
+    // Fatigue score (0-10 points) - very forgiving
     if (data.fatigue !== null) {
-      score -= Math.max(0, (data.fatigue - 5) * 1.5) // Only penalize if fatigue > 5, gentler penalty
+      if (data.fatigue > 8) score -= 8
+      else if (data.fatigue > 6) score -= 3
+      // Only penalize if fatigue > 6, gentler penalty
     }
     
-    // Swelling penalty (0-5 points) - reduced impact
-    if (data.swelling) score -= 5
+    // Swelling penalty (0-3 points) - minimal impact
+    if (data.swelling) score -= 3
     
-    // Stiffness penalty (0-10 points) - reduced and capped
+    // Stiffness penalty (0-7 points) - reduced and capped
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    score -= Math.min(10, stiffnessCount * 1.5) // Gentler penalty, capped at 10 points
+    score -= Math.min(7, stiffnessCount * 1) // Very gentle penalty, capped at 7 points
     
     // Bonus for completing additional questions
     const additionalAnswered = Object.keys(data.additionalQuestions).length
     score += additionalAnswered * 2
     
     // Extra bonus for vitals tracking
-    if (data.bloodPressure || data.bloodSugar) score += 2
+    if (data.bloodPressure || data.bloodSugar) score += 3
     
-    return Math.max(60, Math.min(100, score)) // Minimum score of 60, more reasonable floor
+    return Math.max(65, Math.min(100, score)) // Minimum score of 65, higher floor
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
@@ -237,12 +259,16 @@ Make each question unique and meaningful for health tracking.`
         return [newEntry, ...filteredHistory]
       })
       
-      // Mark morning as complete for today
-      setTodayCheckins((prev: any) => ({
-        ...prev,
-        morning: true,
-        date: today
-      }))
+      // Mark morning as complete for today - use functional update
+      setTodayCheckins((prev: any) => {
+        const updatedCheckins = {
+          ...prev,
+          morning: true,
+          date: today
+        }
+        console.log('Setting morning complete:', updatedCheckins)
+        return updatedCheckins
+      })
       
       onComplete()
     }
