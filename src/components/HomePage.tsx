@@ -9,6 +9,10 @@ interface HomePageProps {
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
+  const [morningHistory] = useKV('morning-history', [])
+  const [middayHistory] = useKV('midday-history', [])
+  const [nightHistory] = useKV('night-history', [])
+  
   const [todayData, setTodayData] = useKV('today-checkins', {
     morning: false,
     midday: false,
@@ -19,20 +23,36 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const currentDate = new Date().toDateString()
   const isToday = todayData.date === currentDate
 
+  // Check actual data presence for today
+  const hasTodayMorning = morningHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === currentDate
+  )
+  const hasTodayMidday = middayHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === currentDate
+  )
+  const hasTodayNight = nightHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === currentDate
+  )
+
   // Reset checkins if we're on a new day using useEffect
   useEffect(() => {
     if (!isToday) {
       setTodayData({
-        morning: false,
-        midday: false,
-        night: false,
+        morning: hasTodayMorning,
+        midday: hasTodayMidday,
+        night: hasTodayNight,
         date: currentDate
       })
     }
-  }, [currentDate, isToday, setTodayData])
+  }, [currentDate, isToday, hasTodayMorning, hasTodayMidday, hasTodayNight, setTodayData])
 
-  // Use current state for display - always show real-time data
-  const currentDayData = todayData
+  // Use actual data presence for display
+  const currentDayData = {
+    morning: hasTodayMorning,
+    midday: hasTodayMidday,
+    night: hasTodayNight,
+    date: currentDate
+  }
 
   const checkInButtons = [
     {

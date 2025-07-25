@@ -36,17 +36,19 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     new Date(entry.date).toDateString() === today
   )
 
-  // Update checkins state based on actual data presence
+  // Update checkins state based on actual data presence - only if date changed
   useEffect(() => {
-    setTodayCheckins((prev: any) => ({
-      morning: hasTodayMorning,
-      midday: hasTodayMidday,
-      night: hasTodayNight,
-      date: today
-    }))
-  }, [hasTodayMorning, hasTodayMidday, hasTodayNight, today, setTodayCheckins])
+    if (todayCheckins.date !== today) {
+      setTodayCheckins({
+        morning: hasTodayMorning,
+        midday: hasTodayMidday,
+        night: hasTodayNight,
+        date: today
+      })
+    }
+  }, [today, todayCheckins.date, hasTodayMorning, hasTodayMidday, hasTodayNight, setTodayCheckins])
 
-  // Use current day checkins for display
+  // Use actual data presence for display (real-time check)
   const currentDayCheckins = {
     morning: hasTodayMorning,
     midday: hasTodayMidday,
@@ -321,6 +323,73 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 ) : (
                   <p className="text-muted-foreground text-center py-4">
                     Complete some midday check-ins to see your mood patterns.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Vitals Tracking */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Vitals Tracking</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {morningHistory.some((entry: any) => entry.bloodPressure || entry.bloodSugar || entry.weight) ? (
+                  <div className="space-y-4">
+                    {/* Weight */}
+                    {morningHistory.some((entry: any) => entry.weight) && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Weight</h4>
+                        <div className="space-y-1">
+                          {morningHistory.slice(0, 7).reverse().map((entry: any, index: number) => 
+                            entry.weight && (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span>{new Date(entry.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+                                <span className="font-medium">{entry.weight} lbs</span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Blood Pressure */}
+                    {morningHistory.some((entry: any) => entry.bloodPressure) && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Blood Pressure</h4>
+                        <div className="space-y-1">
+                          {morningHistory.slice(0, 7).reverse().map((entry: any, index: number) => 
+                            entry.bloodPressure && (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span>{new Date(entry.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+                                <span className="font-medium">{entry.bloodPressure}</span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Blood Sugar */}
+                    {morningHistory.some((entry: any) => entry.bloodSugar) && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Blood Sugar</h4>
+                        <div className="space-y-1">
+                          {morningHistory.slice(0, 7).reverse().map((entry: any, index: number) => 
+                            entry.bloodSugar && (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span>{new Date(entry.date).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+                                <span className="font-medium">{entry.bloodSugar} mg/dL</span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    Record vitals in your morning check-ins to track trends here.
                   </p>
                 )}
               </CardContent>

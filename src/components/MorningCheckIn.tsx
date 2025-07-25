@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, Heart } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +22,15 @@ interface MorningData {
   stiffness: string[]
   bloodPressure: string
   bloodSugar: string
+  additionalQuestions: Record<string, any>
+}
+
+interface DailyQuestion {
+  id: string
+  text: string
+  type: 'scale' | 'boolean' | 'text' | 'multiple'
+  options?: string[]
+  required: boolean
 }
 
 const stiffnessOptions = [
@@ -31,6 +40,7 @@ const stiffnessOptions = [
 export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [morningHistory, setMorningHistory] = useKV('morning-history', [])
+  const [dailyQuestions, setDailyQuestions] = useKV('daily-questions', [])
 
   const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
     morning: false,
@@ -55,7 +65,8 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
         fatigue: existingEntry.fatigue,
         stiffness: existingEntry.stiffness,
         bloodPressure: existingEntry.bloodPressure,
-        bloodSugar: existingEntry.bloodSugar
+        bloodSugar: existingEntry.bloodSugar,
+        additionalQuestions: existingEntry.additionalQuestions || {}
       }
     }
     return {
@@ -65,32 +76,86 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       fatigue: null,
       stiffness: [],
       bloodPressure: '',
-      bloodSugar: ''
+      bloodSugar: '',
+      additionalQuestions: {}
     }
   })
 
+  // Generate AI questions for today
+  useEffect(() => {
+    const generateDailyQuestions = async () => {
+      const existingQuestions = dailyQuestions.find((q: any) => q.date === today)
+      if (existingQuestions) return
+
+      try {
+        const prompt = spark.llmPrompt`Generate 2-3 diverse health assessment questions for a daily morning check-in. These should be different from standard sleep/fatigue/weight questions. Focus on aspects like:
+        - Hydration levels
+        - Physical comfort 
+        - Appetite
+        - Balance/coordination
+        - Breathing ease
+        - Temperature sensitivity
+        - Energy patterns
+        - Minor symptoms
+        
+        Return a JSON array with questions in this format:
+        [
+          {"id": "unique_id", "text": "Question text?", "type": "scale", "required": false},
+          {"id": "unique_id2", "text": "Question text?", "type": "boolean", "required": false}
+        ]
+        
+        Types: "scale" (1-10), "boolean" (yes/no), "text" (short answer), "multiple" (with options array)
+        Keep questions simple, compassionate, and relevant to daily health assessment.`
+        
+        const response = await spark.llm(prompt, "gpt-4o-mini", true)
+        const questions = JSON.parse(response)
+        
+        const todayQuestions = {
+          date: today,
+          questions: questions
+        }
+        
+        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 6)]) // Keep last 7 days
+      } catch (error) {
+        console.error('Failed to generate questions:', error)
+      }
+    }
+
+    generateDailyQuestions()
+  }, [today, dailyQuestions, setDailyQuestions])
+
+  const getTodaysQuestions = (): DailyQuestion[] => {
+    const todayQs = dailyQuestions.find((q: any) => q.date === today)
+    return todayQs?.questions || []
+  }
+
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 100
+    let score = 85 // Start with a higher base score to be less sensitive
     
-    // Sleep score (0-30 points)
+    // Sleep score (0-20 points) - reduced penalty
     if (data.sleep !== null) {
-      if (data.sleep < 6 || data.sleep > 9) score -= 20
-      else if (data.sleep < 7 || data.sleep > 8) score -= 10
+      if (data.sleep < 5 || data.sleep > 10) score -= 15
+      else if (data.sleep < 6 || data.sleep > 9) score -= 8
+      else if (data.sleep < 7 || data.sleep > 8) score -= 4
     }
     
-    // Fatigue score (0-25 points)
+    // Fatigue score (0-20 points) - reduced penalty
     if (data.fatigue !== null) {
-      score -= (data.fatigue - 1) * 3
+      score -= Math.max(0, (data.fatigue - 3) * 2) // Only penalize if fatigue > 3
     }
     
-    // Swelling penalty (0-15 points)
-    if (data.swelling) score -= 15
+    // Swelling penalty (0-10 points) - reduced
+    if (data.swelling) score -= 8
     
-    // Stiffness penalty (0-20 points)
+    // Stiffness penalty (0-15 points) - reduced
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    score -= stiffnessCount * 3
+    score -= stiffnessCount * 2
     
-    return Math.max(0, Math.min(100, score))
+    // Small bonus for completing additional questions
+    const additionalAnswered = Object.keys(data.additionalQuestions).length
+    score += additionalAnswered * 1
+    
+    return Math.max(50, Math.min(100, score)) // Minimum score of 50
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
@@ -124,7 +189,10 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   }
 
   const handleNext = () => {
-    if (currentStep < 6) {
+    const todaysQuestions = getTodaysQuestions()
+    const totalSteps = 7 + todaysQuestions.length // Basic 7 steps + AI questions
+    
+    if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1)
     } else {
       // Complete check-in
@@ -166,6 +234,9 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   }
 
   const canProceed = () => {
+    const todaysQuestions = getTodaysQuestions()
+    const totalSteps = 7 + todaysQuestions.length
+    
     switch (currentStep) {
       case 0: return data.sleep !== null
       case 1: return true // weight is optional
@@ -174,7 +245,14 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       case 4: return data.stiffness.length > 0
       case 5: return true // optional vitals
       case 6: return true // results
-      default: return false
+      default: 
+        // AI questions (steps 7+)
+        const questionIndex = currentStep - 7
+        if (questionIndex < todaysQuestions.length) {
+          const question = todaysQuestions[questionIndex]
+          return !question.required || data.additionalQuestions[question.id] !== undefined
+        }
+        return true
     }
   }
 
@@ -313,7 +391,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
             </Label>
             <div className="space-y-3">
               <div>
-                <Label htmlFor="bp" className="text-sm">Blood Pressure (e.g., 120/80)</Label>
+                <Label htmlFor="bp" className="text-sm">Blood Pressure (optional, e.g., 120/80)</Label>
                 <Input
                   id="bp"
                   value={data.bloodPressure}
@@ -322,7 +400,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
                 />
               </div>
               <div>
-                <Label htmlFor="bs" className="text-sm">Blood Sugar (mg/dL)</Label>
+                <Label htmlFor="bs" className="text-sm">Blood Sugar (optional, mg/dL)</Label>
                 <Input
                   id="bs"
                   value={data.bloodSugar}
@@ -368,19 +446,126 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
         )
 
       default:
+        // Handle AI-generated questions (steps 7+)
+        const todaysQuestions = getTodaysQuestions()
+        const questionIndex = currentStep - 7
+        
+        if (questionIndex < todaysQuestions.length) {
+          const question = todaysQuestions[questionIndex]
+          
+          return (
+            <div className="space-y-4">
+              <Label className="text-base font-medium">
+                {question.text}
+              </Label>
+              
+              {question.type === 'scale' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                      <Button
+                        key={level}
+                        variant={data.additionalQuestions[question.id] === level ? "default" : "outline"}
+                        onClick={() => setData(prev => ({
+                          ...prev,
+                          additionalQuestions: { ...prev.additionalQuestions, [question.id]: level }
+                        }))}
+                        className="aspect-square"
+                      >
+                        {level}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground text-center">
+                    1 = Poor/Low • 10 = Excellent/High
+                  </p>
+                </div>
+              )}
+              
+              {question.type === 'boolean' && (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id="yes"
+                      checked={data.additionalQuestions[question.id] === true}
+                      onCheckedChange={() => setData(prev => ({
+                        ...prev,
+                        additionalQuestions: { ...prev.additionalQuestions, [question.id]: true }
+                      }))}
+                    />
+                    <Label htmlFor="yes" className="text-base">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id="no"
+                      checked={data.additionalQuestions[question.id] === false}
+                      onCheckedChange={() => setData(prev => ({
+                        ...prev,
+                        additionalQuestions: { ...prev.additionalQuestions, [question.id]: false }
+                      }))}
+                    />
+                    <Label htmlFor="no" className="text-base">No</Label>
+                  </div>
+                </div>
+              )}
+              
+              {question.type === 'text' && (
+                <Input
+                  value={data.additionalQuestions[question.id] || ''}
+                  onChange={(e) => setData(prev => ({
+                    ...prev,
+                    additionalQuestions: { ...prev.additionalQuestions, [question.id]: e.target.value }
+                  }))}
+                  placeholder="Your answer..."
+                  className="text-lg p-4"
+                />
+              )}
+              
+              {question.type === 'multiple' && question.options && (
+                <div className="space-y-2">
+                  {question.options.map((option: string, index: number) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <Checkbox
+                        id={`option-${index}`}
+                        checked={data.additionalQuestions[question.id] === option}
+                        onCheckedChange={() => setData(prev => ({
+                          ...prev,
+                          additionalQuestions: { ...prev.additionalQuestions, [question.id]: option }
+                        }))}
+                      />
+                      <Label htmlFor={`option-${index}`} className="text-base">{option}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {!question.required && (
+                <p className="text-sm text-muted-foreground">This question is optional</p>
+              )}
+            </div>
+          )
+        }
+        
         return null
     }
   }
 
-  const stepTitles = [
-    'Sleep Duration',
-    'Weight Check',
-    'Swelling Check',
-    'Energy Level',
-    'Stiffness Areas',
-    'Optional Vitals',
-    'Your Results'
-  ]
+  const getStepTitles = () => {
+    const basicTitles = [
+      'Sleep Duration',
+      'Weight Check',
+      'Swelling Check',
+      'Energy Level',
+      'Stiffness Areas',
+      'Optional Vitals',
+      'Your Results'
+    ]
+    
+    const todaysQuestions = getTodaysQuestions()
+    const aiTitles = todaysQuestions.map((q, index) => `Daily Question ${index + 1}`)
+    
+    return [...basicTitles, ...aiTitles]
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -398,7 +583,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
           <div className="flex-1">
             <h1 className="text-lg font-semibold">Morning Check-In</h1>
             <p className="text-sm text-primary-foreground/80">
-              Step {currentStep + 1} of {stepTitles.length}: {stepTitles[currentStep]}
+              Step {currentStep + 1} of {getStepTitles().length}: {getStepTitles()[currentStep]}
             </p>
           </div>
         </div>
@@ -407,7 +592,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
         <div className="mt-4 bg-primary-foreground/20 rounded-full h-2">
           <div 
             className="bg-primary-foreground rounded-full h-2 transition-all duration-300"
-            style={{ width: `${((currentStep + 1) / stepTitles.length) * 100}%` }}
+            style={{ width: `${((currentStep + 1) / getStepTitles().length) * 100}%` }}
           />
         </div>
       </div>
@@ -428,7 +613,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
           disabled={!canProceed()}
           className="w-full"
         >
-          {currentStep === 6 ? 'Complete Check-In' : 'Continue'}
+          {currentStep === getStepTitles().length - 1 ? 'Complete Check-In' : 'Continue'}
           <ArrowRight size={16} className="ml-2" />
         </Button>
       </div>
