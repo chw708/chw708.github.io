@@ -74,7 +74,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
     }
   })
 
-  // Generate AI questions for today
+  // Generate AI questions for today (4 questions per day)
   useEffect(() => {
     const generateDailyQuestions = async () => {
       const existingQuestions = dailyQuestions.find((q: any) => q.date === today)
@@ -94,7 +94,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
           year: 'numeric'
         })
 
-        const prompt = spark.llmPrompt`Generate 2-3 completely unique daily health assessment questions for a morning check-in on ${dayInfo}. 
+        const prompt = spark.llmPrompt`Generate exactly 4 completely unique daily health assessment questions for a morning check-in on ${dayInfo}. 
 
 CRITICAL: These questions must be entirely DIFFERENT from these recent questions used in past days:
 ${recentQuestions ? `Recent questions used:\n- ${recentQuestions}` : 'No recent questions found (first time)'}
@@ -125,18 +125,26 @@ Focus on diverse health aspects like:
 - Headache or sinus pressure
 - Throat comfort
 - Overall body comfort
+- Digestion and stomach comfort
+- Mood and emotional state
+- Breathing patterns
+- Posture comfort
+- Environmental sensitivity
+- Motivation and mental readiness
 
 Generate questions that are:
 - Completely unique from recent days
 - Simple, clear, and gentle in tone
 - Appropriate for elderly/health-conscious users
 - Focused on immediate morning sensations
-- Covering different health dimensions each day
+- Covering 4 different health dimensions each day
 
-Return a valid JSON array with exactly 2-3 questions:
+Return a valid JSON array with exactly 4 questions:
 [
   {"id": "unique_${Date.now()}_1", "text": "Your question here", "type": "scale", "required": false},
-  {"id": "unique_${Date.now()}_2", "text": "Another question", "type": "multiple", "options": ["Option1", "Option2", "Option3"], "required": false}
+  {"id": "unique_${Date.now()}_2", "text": "Another question", "type": "multiple", "options": ["Option1", "Option2", "Option3"], "required": false},
+  {"id": "unique_${Date.now()}_3", "text": "Third question", "type": "boolean", "required": false},
+  {"id": "unique_${Date.now()}_4", "text": "Fourth question", "type": "scale", "required": false}
 ]
 
 Available types:
@@ -145,7 +153,7 @@ Available types:
 - "text" (short free text)
 - "multiple" (select from provided options)
 
-Make sure each question explores a completely different health aspect than recent days.`
+Make sure each question explores a completely different health aspect than recent days and from each other within the same day.`
         
         const response = await spark.llm(prompt, "gpt-4o-mini", true)
         const questions = JSON.parse(response)
@@ -159,7 +167,7 @@ Make sure each question explores a completely different health aspect than recen
         setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 9)]) // Keep last 10 days
       } catch (error) {
         console.error('Failed to generate questions:', error)
-        // More varied fallback questions
+        // More varied fallback questions - 4 questions each set
         const fallbackOptions = [
           [
             {
@@ -173,18 +181,16 @@ Make sure each question explores a completely different health aspect than recen
               text: "How clear and sharp is your thinking right now?",
               type: "scale", 
               required: false
-            }
-          ],
-          [
+            },
             {
-              id: `appetite_${Date.now()}`,
+              id: `appetite_${Date.now() + 2}`,
               text: "How would you describe your appetite this morning?",
               type: "multiple",
               options: ["Very hungry", "Moderately hungry", "Not very hungry", "No appetite"],
               required: false
             },
             {
-              id: `breathing_${Date.now() + 1}`,
+              id: `breathing_${Date.now() + 3}`,
               text: "Is your breathing feeling comfortable and easy?",
               type: "boolean",
               required: false
@@ -202,6 +208,45 @@ Make sure each question explores a completely different health aspect than recen
               text: "Are you feeling too warm, too cold, or just right?",
               type: "multiple",
               options: ["Too warm", "Just right", "Too cold", "Variable"],
+              required: false
+            },
+            {
+              id: `vision_${Date.now() + 2}`,
+              text: "How is your vision clarity this morning?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `mood_${Date.now() + 3}`,
+              text: "Are you feeling emotionally ready for the day?",
+              type: "boolean",
+              required: false
+            }
+          ],
+          [
+            {
+              id: `circulation_${Date.now()}`,
+              text: "How do your hands and feet feel temperature-wise?",
+              type: "multiple",
+              options: ["Warm and comfortable", "Slightly cool", "Cold", "Variable"],
+              required: false
+            },
+            {
+              id: `digest_${Date.now() + 1}`,
+              text: "How comfortable does your stomach feel?",
+              type: "scale",
+              required: false
+            },
+            {
+              id: `coordination_${Date.now() + 2}`,
+              text: "Do your movements feel smooth and coordinated?",
+              type: "boolean",
+              required: false
+            },
+            {
+              id: `alertness_${Date.now() + 3}`,
+              text: "Rate your mental alertness level right now",
+              type: "scale",
               required: false
             }
           ]
@@ -261,7 +306,7 @@ Make sure each question explores a completely different health aspect than recen
     else if (stiffnessCount >= 1) score -= 2 // Some stiffness
     // No stiffness gets no penalty
     
-    // Moderate bonuses for engagement
+    // Moderate bonuses for engagement (4 AI questions expected)
     const additionalAnswered = Object.keys(data.additionalQuestions).length
     score += additionalAnswered * 1 // Small bonus for answering AI questions
     
@@ -310,7 +355,7 @@ Make sure each question explores a completely different health aspect than recen
 
   const handleNext = () => {
     const todaysQuestions = getTodaysQuestions()
-    const totalSteps = 7 + todaysQuestions.length // Basic 7 steps + AI questions
+    const totalSteps = 7 + todaysQuestions.length // Basic 7 steps + AI questions (now 4)
     
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1)
@@ -359,7 +404,7 @@ Make sure each question explores a completely different health aspect than recen
 
   const canProceed = () => {
     const todaysQuestions = getTodaysQuestions()
-    const totalSteps = 7 + todaysQuestions.length
+    const totalSteps = 7 + todaysQuestions.length // Now handles 4 AI questions
     
     switch (currentStep) {
       case 0: return data.sleep !== null
@@ -370,7 +415,7 @@ Make sure each question explores a completely different health aspect than recen
       case 5: return true // optional vitals
       case 6: return true // results
       default: 
-        // AI questions (steps 7+)
+        // AI questions (steps 7+ for all 4 questions)
         const questionIndex = currentStep - 7
         if (questionIndex < todaysQuestions.length) {
           const question = todaysQuestions[questionIndex]
