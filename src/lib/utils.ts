@@ -14,7 +14,13 @@ export function getTodayDateString(): string {
 // Utility function to check if a date is today
 export function isToday(dateString: string): boolean {
   const today = getTodayDateString()
-  // Handle both the old format (from toDateString()) and new format (YYYY-MM-DD)
+  
+  // If dateString is already in YYYY-MM-DD format, compare directly
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return today === dateString
+  }
+  
+  // Handle other date formats by converting to YYYY-MM-DD
   const checkDate = new Date(dateString)
   const checkDateFormatted = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`
   return today === checkDateFormatted
