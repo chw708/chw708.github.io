@@ -298,8 +298,6 @@ Keep simple, elderly-friendly, Korean culture appropriate.`
     return fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)]
   }
 
-  return (
-
   const getTodaysQuestions = (): DailyQuestion[] => {
     const todayQs = dailyQuestions.find((q: any) => q.date === today)
     const questions = todayQs?.questions
