@@ -224,43 +224,44 @@ Make sure each question explores a completely different health aspect than recen
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 95 // Start with very high base score to be much less sensitive
+    let score = 92 // Start with high base score to be much less sensitive
     
-    // Sleep score (0-6 points) - extremely forgiving ranges
+    // Sleep score (0-5 points) - very forgiving ranges
     if (data.sleep !== null) {
-      if (data.sleep < 3 || data.sleep > 12) score -= 6
-      else if (data.sleep < 4.5 || data.sleep > 10.5) score -= 3
-      else if (data.sleep < 5.5 || data.sleep > 9.5) score -= 1
+      if (data.sleep < 3 || data.sleep > 12) score -= 5
+      else if (data.sleep < 4.5 || data.sleep > 10.5) score -= 2
+      else if (data.sleep < 5.5 || data.sleep > 9.5) score -= 0.5
       // 5.5-9.5 hours gets no penalty (extremely forgiving range)
     }
     
-    // Fatigue score (0-5 points) - very gentle penalties
+    // Fatigue score (0-4 points) - very gentle penalties
     if (data.fatigue !== null) {
-      if (data.fatigue > 8) score -= 5
-      else if (data.fatigue > 7) score -= 2
-      // Only penalize if fatigue > 7, minimal impact
+      if (data.fatigue > 8.5) score -= 4
+      else if (data.fatigue > 7.5) score -= 2
+      else if (data.fatigue > 6.5) score -= 0.5
+      // Only penalize if fatigue > 6.5, minimal impact
     }
     
     // Swelling penalty (0-1 points) - very minimal impact
-    if (data.swelling) score -= 1
+    if (data.swelling) score -= 0.5
     
-    // Stiffness penalty (0-3 points) - much more forgiving
+    // Stiffness penalty (0-2 points) - much more forgiving
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    if (stiffnessCount > 4) score -= 3
-    else if (stiffnessCount > 2) score -= 1
+    if (stiffnessCount > 4) score -= 2
+    else if (stiffnessCount > 2) score -= 0.5
     // Only significant penalty if many stiff areas
     
     // Generous bonuses for engagement
     const additionalAnswered = Object.keys(data.additionalQuestions).length
-    score += additionalAnswered * 3 // Higher bonus for answering questions
+    score += additionalAnswered * 2 // Bonus for answering AI questions
     
     // Extra bonus for vitals tracking
-    if (data.bloodPressure || data.bloodSugar) score += 5
+    if (data.bloodPressure || data.bloodSugar) score += 3
     
     // Bonus for simply completing the check-in
-    score += 2
+    score += 3
     
-    return Math.max(75, Math.min(100, score)) // Minimum score of 75, much higher floor
+    return Math.max(78, Math.min(100, score)) // Minimum score of 78, much higher floor
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {

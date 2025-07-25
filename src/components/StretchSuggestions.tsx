@@ -66,20 +66,20 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
   
   const relevantStretches = uniqueAreas.map((area, areaIndex) => {
     const stretches = stretchDatabase[area]
-    // Use today's date + unique area hash to ensure different stretches for different areas and days
-    const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
     
-    // Create a much better hash that's unique per area using multiple factors
-    const areaHash = area.split('').reduce((hash, char, charIndex) => {
-      return hash + char.charCodeAt(0) * (charIndex + 1) * 37
+    // Create unique seed for each area per day
+    const today = new Date()
+    const dayOfYear = Math.floor(today.getTime() / (1000 * 60 * 60 * 24))
+    
+    // Create unique hash for each body area
+    const areaCode = area.split('').reduce((hash, char, index) => {
+      return hash + char.charCodeAt(0) * (index + 1) * 47  // Use prime number
     }, 0)
     
-    // Add hour of day to ensure variety even within the same day for different check-ins
-    const hourOfDay = new Date().getHours()
+    // Add area index to ensure different selections for different areas
+    const uniqueSeed = (dayOfYear * 31 + areaCode * 17 + areaIndex * 97) % stretches.length
     
-    // Use multiple factors to create truly unique selection per area per day
-    const stretchIndex = (dayOfYear * 13 + areaHash * 7 + areaIndex * 19 + hourOfDay * 3) % stretches.length
-    const selectedStretch = stretches[stretchIndex]
+    const selectedStretch = stretches[uniqueSeed]
     
     return { area, stretch: selectedStretch }
   })
@@ -93,7 +93,7 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
       <h3 className="text-lg font-semibold text-center">Recommended Stretches</h3>
       <div className="space-y-3">
         {relevantStretches.map((item, index) => (
-          <div key={`${item.area}-${index}-${Date.now()}`} className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
+          <div key={`${item.area}-${index}`} className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
             <h4 className="font-medium text-accent-foreground mb-1">{item.area}</h4>
             <p className="text-sm text-muted-foreground">{item.stretch}</p>
           </div>
