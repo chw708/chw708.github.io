@@ -231,44 +231,47 @@ Make sure each question explores a completely different health aspect than recen
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 92 // Start with high base score to be much less sensitive
+    let score = 85 // Start with moderate base score for accurate assessment
     
-    // Sleep score (0-5 points) - very forgiving ranges
+    // Sleep score (0-12 points) - realistic sleep assessment
     if (data.sleep !== null) {
-      if (data.sleep < 3 || data.sleep > 12) score -= 5
-      else if (data.sleep < 4.5 || data.sleep > 10.5) score -= 2
-      else if (data.sleep < 5.5 || data.sleep > 9.5) score -= 0.5
-      // 5.5-9.5 hours gets no penalty (extremely forgiving range)
+      if (data.sleep < 4 || data.sleep > 10) score -= 12 // Severely inadequate sleep
+      else if (data.sleep < 5.5 || data.sleep > 9) score -= 8 // Poor sleep duration
+      else if (data.sleep < 6.5 || data.sleep > 8.5) score -= 4 // Below optimal range
+      else if (data.sleep >= 7 && data.sleep <= 8) score += 2 // Optimal sleep bonus
+      // 6.5-8.5 hours gets minimal penalty, 7-8 hours gets bonus
     }
     
-    // Fatigue score (0-4 points) - very gentle penalties
+    // Fatigue score (0-10 points) - meaningful fatigue assessment
     if (data.fatigue !== null) {
-      if (data.fatigue > 8.5) score -= 4
-      else if (data.fatigue > 7.5) score -= 2
-      else if (data.fatigue > 6.5) score -= 0.5
-      // Only penalize if fatigue > 6.5, minimal impact
+      if (data.fatigue >= 9) score -= 10 // Severely exhausted
+      else if (data.fatigue >= 7) score -= 6 // High fatigue
+      else if (data.fatigue >= 5) score -= 3 // Moderate fatigue
+      else if (data.fatigue <= 3) score += 3 // Good energy bonus
+      // Fatigue 4-6 is neutral, 1-3 gets bonus
     }
     
-    // Swelling penalty (0-1 points) - very minimal impact
-    if (data.swelling) score -= 0.5
+    // Swelling penalty (0-3 points) - swelling is a health concern
+    if (data.swelling) score -= 3
     
-    // Stiffness penalty (0-2 points) - much more forgiving
+    // Stiffness penalty (0-8 points) - stiffness indicates health issues
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    if (stiffnessCount > 4) score -= 2
-    else if (stiffnessCount > 2) score -= 0.5
-    // Only significant penalty if many stiff areas
+    if (stiffnessCount >= 5) score -= 8 // Multiple stiff areas
+    else if (stiffnessCount >= 3) score -= 5 // Several stiff areas
+    else if (stiffnessCount >= 1) score -= 2 // Some stiffness
+    // No stiffness gets no penalty
     
-    // Generous bonuses for engagement
+    // Moderate bonuses for engagement
     const additionalAnswered = Object.keys(data.additionalQuestions).length
-    score += additionalAnswered * 2 // Bonus for answering AI questions
+    score += additionalAnswered * 1 // Small bonus for answering AI questions
     
-    // Extra bonus for vitals tracking
-    if (data.bloodPressure || data.bloodSugar) score += 3
+    // Small bonus for vitals tracking
+    if (data.bloodPressure || data.bloodSugar) score += 1
     
-    // Bonus for simply completing the check-in
-    score += 3
+    // Small completion bonus
+    score += 1
     
-    return Math.max(78, Math.min(100, score)) // Minimum score of 78, much higher floor
+    return Math.max(50, Math.min(100, score)) // Minimum score of 50, allows for realistic range
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
@@ -278,26 +281,28 @@ Make sure each question explores a completely different health aspect than recen
       advice.push("Consider aiming for 7-8 hours of sleep for optimal energy")
     }
     
-    if (data.fatigue !== null && data.fatigue > 7) {
-      advice.push("Some gentle movement or fresh air might help boost your energy")
+    if (data.fatigue !== null && data.fatigue >= 7) {
+      advice.push("High fatigue may indicate need for better rest or gentle activity")
     }
     
     if (data.swelling) {
-      advice.push("Stay well hydrated and consider elevating your legs when resting")
+      advice.push("Monitor swelling - stay hydrated and consider elevating legs when resting")
     }
     
     if (data.stiffness.length > 0 && !data.stiffness.includes('None')) {
       advice.push("Gentle stretches can help ease stiffness and improve mobility")
     }
     
-    if (score >= 85) {
-      advice.push("Excellent! You're feeling great and starting the day strong")
-    } else if (score >= 75) {
-      advice.push("You're doing well! Keep taking good care of yourself")
-    } else if (score >= 65) {
-      advice.push("Listen to your body today and be kind to yourself")
+    if (score >= 90) {
+      advice.push("Excellent health status! You're feeling great and starting strong")
+    } else if (score >= 80) {
+      advice.push("Good health status - you're doing well overall")
+    } else if (score >= 70) {
+      advice.push("Fair health status - some areas may need attention")
+    } else if (score >= 60) {
+      advice.push("Health indicators suggest focusing on rest and gentle self-care today")
     } else {
-      advice.push("Today might be a good day to focus on rest and gentle self-care")
+      advice.push("Multiple health concerns present - consider consulting a healthcare provider")
     }
     
     return advice
