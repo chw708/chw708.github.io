@@ -88,24 +88,41 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       if (existingQuestions) return
 
       try {
-        const prompt = spark.llmPrompt`Generate 2-3 diverse health assessment questions for a daily morning check-in. These should be different from standard sleep/fatigue/weight questions. Focus on aspects like:
-        - Hydration levels
-        - Physical comfort 
-        - Appetite
-        - Balance/coordination
-        - Breathing ease
-        - Temperature sensitivity
-        - Energy patterns
-        - Minor symptoms
-        
-        Return a JSON array with questions in this format:
-        [
-          {"id": "unique_id", "text": "Question text?", "type": "scale", "required": false},
-          {"id": "unique_id2", "text": "Question text?", "type": "boolean", "required": false}
-        ]
-        
-        Types: "scale" (1-10), "boolean" (yes/no), "text" (short answer), "multiple" (with options array)
-        Keep questions simple, compassionate, and relevant to daily health assessment.`
+        const prompt = spark.llmPrompt`Generate 2-3 unique daily health assessment questions for a morning check-in on ${new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}. These should be DIFFERENT from standard questions about sleep, weight, fatigue, stiffness, blood pressure, and blood sugar.
+
+Focus on varied aspects of daily health such as:
+- Hydration awareness and thirst levels
+- Appetite and hunger patterns  
+- Balance, coordination, or dizziness
+- Breathing comfort and ease
+- Temperature sensitivity (feeling too hot/cold)
+- Joint flexibility or morning mobility
+- Energy patterns throughout the day
+- Digestive comfort
+- Mental clarity and focus
+- Physical comfort while sitting/standing
+- Minor symptoms awareness
+
+Create questions that are:
+- Simple and easy to understand
+- Relevant to elderly and health-conscious users
+- Different from yesterday's questions
+- Compassionate in tone
+- Focused on immediate physical/mental sensations
+
+Return a JSON array with questions in this exact format:
+[
+  {"id": "hydration_${Date.now()}", "text": "How is your thirst level this morning?", "type": "scale", "required": false},
+  {"id": "appetite_${Date.now() + 1}", "text": "How would you describe your appetite today?", "type": "multiple", "options": ["Strong", "Normal", "Weak", "No appetite"], "required": false}
+]
+
+Types available: 
+- "scale" (1-10 rating)
+- "boolean" (yes/no)
+- "text" (short answer)
+- "multiple" (with options array)
+
+Make each question unique and meaningful for health tracking.`
         
         const response = await spark.llm(prompt, "gpt-4o-mini", true)
         const questions = JSON.parse(response)
@@ -130,59 +147,65 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 85 // Start with a higher base score to be less sensitive
+    let score = 90 // Start with a higher base score to be less sensitive
     
-    // Sleep score (0-20 points) - reduced penalty
+    // Sleep score (0-15 points) - reduced penalty and more forgiving ranges
     if (data.sleep !== null) {
-      if (data.sleep < 5 || data.sleep > 10) score -= 15
-      else if (data.sleep < 6 || data.sleep > 9) score -= 8
-      else if (data.sleep < 7 || data.sleep > 8) score -= 4
+      if (data.sleep < 4 || data.sleep > 11) score -= 12
+      else if (data.sleep < 5.5 || data.sleep > 9.5) score -= 6
+      else if (data.sleep < 6.5 || data.sleep > 8.5) score -= 2
+      // 6.5-8.5 hours gets no penalty (more forgiving range)
     }
     
-    // Fatigue score (0-20 points) - reduced penalty
+    // Fatigue score (0-15 points) - much more forgiving
     if (data.fatigue !== null) {
-      score -= Math.max(0, (data.fatigue - 3) * 2) // Only penalize if fatigue > 3
+      score -= Math.max(0, (data.fatigue - 5) * 1.5) // Only penalize if fatigue > 5, gentler penalty
     }
     
-    // Swelling penalty (0-10 points) - reduced
-    if (data.swelling) score -= 8
+    // Swelling penalty (0-5 points) - reduced impact
+    if (data.swelling) score -= 5
     
-    // Stiffness penalty (0-15 points) - reduced
+    // Stiffness penalty (0-10 points) - reduced and capped
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    score -= stiffnessCount * 2
+    score -= Math.min(10, stiffnessCount * 1.5) // Gentler penalty, capped at 10 points
     
-    // Small bonus for completing additional questions
+    // Bonus for completing additional questions
     const additionalAnswered = Object.keys(data.additionalQuestions).length
-    score += additionalAnswered * 1
+    score += additionalAnswered * 2
     
-    return Math.max(50, Math.min(100, score)) // Minimum score of 50
+    // Extra bonus for vitals tracking
+    if (data.bloodPressure || data.bloodSugar) score += 2
+    
+    return Math.max(60, Math.min(100, score)) // Minimum score of 60, more reasonable floor
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
     const advice = []
     
-    if (data.sleep !== null && (data.sleep < 7 || data.sleep > 8)) {
-      advice.push("Aim for 7-8 hours of sleep for optimal recovery")
+    if (data.sleep !== null && (data.sleep < 6.5 || data.sleep > 8.5)) {
+      advice.push("Consider aiming for 7-8 hours of sleep for optimal energy")
     }
     
-    if (data.fatigue !== null && data.fatigue > 6) {
-      advice.push("Consider gentle stretching or light exercise to boost energy")
+    if (data.fatigue !== null && data.fatigue > 7) {
+      advice.push("Some gentle movement or fresh air might help boost your energy")
     }
     
     if (data.swelling) {
-      advice.push("Stay hydrated and consider elevating your legs when resting")
+      advice.push("Stay well hydrated and consider elevating your legs when resting")
     }
     
     if (data.stiffness.length > 0 && !data.stiffness.includes('None')) {
-      advice.push("Try some gentle stretches for the areas feeling stiff")
+      advice.push("Gentle stretches can help ease stiffness and improve mobility")
     }
     
-    if (score >= 80) {
-      advice.push("Great job! You're starting the day strong")
-    } else if (score >= 60) {
-      advice.push("Listen to your body today and be gentle with yourself")
+    if (score >= 85) {
+      advice.push("Excellent! You're feeling great and starting the day strong")
+    } else if (score >= 75) {
+      advice.push("You're doing well! Keep taking good care of yourself")
+    } else if (score >= 65) {
+      advice.push("Listen to your body today and be kind to yourself")
     } else {
-      advice.push("Take it easy today and focus on self-care")
+      advice.push("Today might be a good day to focus on rest and gentle self-care")
     }
     
     return advice

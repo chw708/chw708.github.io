@@ -36,17 +36,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     new Date(entry.date).toDateString() === today
   )
 
-  // Update checkins state based on actual data presence - only if date changed
-  useEffect(() => {
-    if (todayCheckins.date !== today) {
-      setTodayCheckins({
-        morning: hasTodayMorning,
-        midday: hasTodayMidday,
-        night: hasTodayNight,
-        date: today
-      })
-    }
-  }, [today, todayCheckins.date, hasTodayMorning, hasTodayMidday, hasTodayNight, setTodayCheckins])
+
 
   // Use actual data presence for display (real-time check)
   const currentDayCheckins = {
@@ -55,6 +45,21 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     night: hasTodayNight,
     date: today
   }
+
+  // Sync the todayCheckins state with actual data presence
+  useEffect(() => {
+    if (hasTodayMorning !== todayCheckins.morning || 
+        hasTodayMidday !== todayCheckins.midday || 
+        hasTodayNight !== todayCheckins.night ||
+        todayCheckins.date !== today) {
+      setTodayCheckins({
+        morning: hasTodayMorning,
+        midday: hasTodayMidday,
+        night: hasTodayNight,
+        date: today
+      })
+    }
+  }, [hasTodayMorning, hasTodayMidday, hasTodayNight, today, todayCheckins, setTodayCheckins])
 
   const getCurrentHealthScore = () => {
     const todayEntry = morningHistory.find((entry: any) => 
@@ -137,9 +142,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const insights = getWeeklyInsights()
   const todayQuote = getLatestQuote()
 
-  const completedCount = (currentDayCheckins.morning ? 1 : 0) + 
-                       (currentDayCheckins.midday ? 1 : 0) + 
-                       (currentDayCheckins.night ? 1 : 0)
+  const completedCount = (hasTodayMorning ? 1 : 0) + 
+                       (hasTodayMidday ? 1 : 0) + 
+                       (hasTodayNight ? 1 : 0)
 
   return (
     <div className="min-h-screen bg-background">
@@ -159,9 +164,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         <div className="bg-primary-foreground/10 rounded-xl p-4">
           <h3 className="text-primary-foreground font-medium mb-3">Today's Check-ins</h3>
           <div className="flex gap-2">
-            <div className={`w-3 h-3 rounded-full ${currentDayCheckins.morning ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
-            <div className={`w-3 h-3 rounded-full ${currentDayCheckins.midday ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
-            <div className={`w-3 h-3 rounded-full ${currentDayCheckins.night ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
+            <div className={`w-3 h-3 rounded-full ${hasTodayMorning ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
+            <div className={`w-3 h-3 rounded-full ${hasTodayMidday ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
+            <div className={`w-3 h-3 rounded-full ${hasTodayNight ? 'bg-green-400' : 'bg-primary-foreground/30'}`} />
           </div>
           <p className="text-primary-foreground/80 text-xs mt-2">
             {`${completedCount}/3 completed today`}
@@ -200,7 +205,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {currentDayCheckins.morning && hasTodayMorning && (
+                {hasTodayMorning && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm font-medium text-green-800">Morning Check-in Complete</p>
                     <p className="text-xs text-green-600">
@@ -213,7 +218,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
                 
-                {currentDayCheckins.midday && hasTodayMidday && (
+                {hasTodayMidday && (
                   <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <p className="text-sm font-medium text-orange-800">Midday Log Complete</p>
                     <p className="text-xs text-orange-600">
@@ -226,7 +231,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
                 
-                {currentDayCheckins.night && hasTodayNight && (
+                {hasTodayNight && (
                   <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <p className="text-sm font-medium text-purple-800">Night Reflection Complete</p>
                     <p className="text-xs text-purple-600">
@@ -237,7 +242,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
 
-                {completedCount === 0 && (
+                {!hasTodayMorning && !hasTodayMidday && !hasTodayNight && (
                   <p className="text-muted-foreground text-center py-4">
                     No check-ins completed today yet. Start with your morning check-in!
                   </p>
@@ -419,7 +424,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <CardTitle>Recommended Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {!currentDayCheckins.morning ? (
+                {!hasTodayMorning ? (
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('morning')}
@@ -429,7 +434,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </Button>
                 ) : null}
                 
-                {!currentDayCheckins.midday ? (
+                {!hasTodayMidday ? (
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('midday')}
@@ -439,7 +444,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </Button>
                 ) : null}
                 
-                {!currentDayCheckins.night ? (
+                {!hasTodayNight ? (
                   <Button
                     variant="outline"
                     onClick={() => onNavigate('night')}

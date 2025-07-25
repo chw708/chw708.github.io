@@ -43,9 +43,11 @@ const stretchDatabase: Record<string, string[]> = {
 export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestionsProps) {
   const relevantStretches = stiffnessAreas
     .filter(area => area !== 'None' && stretchDatabase[area])
-    .flatMap(area => 
-      stretchDatabase[area].map(stretch => ({ area, stretch }))
-    )
+    .map(area => {
+      const stretches = stretchDatabase[area]
+      const randomStretch = stretches[Math.floor(Math.random() * stretches.length)]
+      return { area, stretch: randomStretch }
+    })
 
   if (relevantStretches.length === 0) {
     return null
@@ -55,7 +57,7 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-center">Recommended Stretches</h3>
       <div className="space-y-3">
-        {relevantStretches.slice(0, 3).map((item, index) => (
+        {relevantStretches.map((item, index) => (
           <div key={index} className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
             <h4 className="font-medium text-accent-foreground mb-1">{item.area}</h4>
             <p className="text-sm text-muted-foreground">{item.stretch}</p>
