@@ -74,285 +74,231 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
     }
   })
 
-  // Generate AI questions for today (4 questions per day)
+  // Generate AI questions for today (4 questions per day) - optimized for speed
   useEffect(() => {
     const generateDailyQuestions = async () => {
       const existingQuestions = dailyQuestions.find((q: any) => q.date === today)
       if (existingQuestions) return
 
+      // Start with fallback questions immediately for faster UX
+      const fallbackQuestions = getRandomFallbackQuestions()
+      const tempQuestions = {
+        date: today,
+        questions: fallbackQuestions,
+        generated: new Date().toISOString(),
+        fallback: true
+      }
+      setDailyQuestions((prev: any[]) => [tempQuestions, ...prev.slice(0, 9)])
+
       try {
-        // Get last few days of questions to avoid repetition
-        const recentQuestions = dailyQuestions.slice(0, 5).flatMap((q: any) => 
+        // Get only last 2 days to avoid repetition (shorter context for speed)
+        const recentQuestions = dailyQuestions.slice(0, 2).flatMap((q: any) => 
           q.questions?.map((question: any) => question.text) || []
-        ).join('\n- ')
+        ).join(', ')
 
-        // Get current day info for more contextual questions
-        const dayInfo = new Date().toLocaleDateString('en', { 
-          weekday: 'long', 
-          month: 'long', 
-          day: 'numeric',
-          year: 'numeric'
-        })
+        const prompt = spark.llmPrompt`Generate 4 unique Korean health questions for morning check-in.
 
-        const prompt = spark.llmPrompt`Generate exactly 4 completely unique daily health assessment questions for a morning check-in on ${dayInfo}. 
+Avoid these recent topics: ${recentQuestions || 'none'}
 
-CRITICAL: These questions must be entirely DIFFERENT from these recent questions used in past days:
-${recentQuestions ? `Recent questions used:\n- ${recentQuestions}` : 'No recent questions found (first time)'}
+Create varied questions about: hydration, breathing, balance, mood, appetite, comfort, circulation, clarity.
 
-AVOID these standard topics covered elsewhere: sleep duration, weight, fatigue level, body stiffness, blood pressure, blood sugar.
+JSON format: [{"id":"q1_${Date.now()}","text":"question","type":"scale","required":false}]
 
-Focus on diverse health aspects that change daily. Use a wide variety like:
-- Hydration and thirst levels
-- Appetite and digestive sensations
-- Balance, stability, coordination
-- Breathing ease and respiratory comfort  
-- Temperature sensitivity and circulation
-- Joint flexibility and movement quality
-- Mental clarity and cognitive sharpness
-- Eye comfort, vision, light sensitivity
-- Hearing clarity and ear comfort
-- Skin sensations (dryness, itching, temperature)
-- Morning energy readiness and motivation
-- Physical comfort in different positions
-- Minor symptom awareness (headaches, dizziness)
-- Circulation feelings (tingling, warmth, numbness)
-- Seasonal health considerations and weather sensitivity
-- Emotional readiness and mood upon waking
-- Muscle tension, relaxation, and comfort
-- Fine motor skills and dexterity
-- Alertness and mental focus capacity
-- Environmental comfort (lighting, sound, air quality)
-- Sinus pressure, nasal congestion
-- Throat comfort and voice clarity
-- Overall body comfort and physical well-being
-- Gastrointestinal comfort and digestion
-- Stress levels and anxiety upon waking
-- Breathing patterns and lung capacity
-- Posture comfort and spinal alignment
-- Weather/environmental sensitivity
-- Morning motivation and mental readiness
-- Hand/foot warmth and sensation
-- Dizziness or lightheadedness
-- Swallowing comfort
-- Overall sense of vitality
-
-Generate questions that are:
-- Completely unique from recent days (avoid ANY repetition)
-- Simple, clear, and gentle in tone suitable for all ages
-- Focused on immediate morning physical/mental sensations
-- Covering 4 completely different health dimensions each day
-- Culturally appropriate for Korean users and elderly populations
-- Practical and relevant to daily health monitoring
-
-Return a valid JSON array with exactly 4 questions. Mix question types for variety:
-[
-  {"id": "unique_${Date.now()}_1", "text": "Your question here", "type": "scale", "required": false},
-  {"id": "unique_${Date.now()}_2", "text": "Another question", "type": "multiple", "options": ["Option1", "Option2", "Option3", "Option4"], "required": false},
-  {"id": "unique_${Date.now()}_3", "text": "Third question", "type": "boolean", "required": false},
-  {"id": "unique_${Date.now()}_4", "text": "Fourth question", "type": "scale", "required": false}
-]
-
-Question types available:
-- "scale" (1-10 rating: 1=Poor/Low/Uncomfortable, 10=Excellent/High/Very Comfortable)
-- "boolean" (yes/no questions for simple binary responses)
-- "text" (short free text for descriptive responses)
-- "multiple" (select from 3-4 specific options that cover the range of responses)
-
-Ensure each of the 4 questions targets a completely different health aspect and uses varied question types for engagement.`
+Keep simple, elderly-friendly, Korean culture appropriate.`
         
         const response = await spark.llm(prompt, "gpt-4o-mini", true)
         const questions = JSON.parse(response)
         
-        const todayQuestions = {
+        const aiQuestions = {
           date: today,
           questions: questions,
-          generated: new Date().toISOString()
-        }
-        
-        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 9)]) // Keep last 10 days
-      } catch (error) {
-        console.error('Failed to generate questions:', error)
-        // More varied fallback questions - 4 questions each set covering diverse health aspects
-        const fallbackOptions = [
-          [
-            {
-              id: `hydration_${Date.now()}`,
-              text: "How is your thirst level this morning?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `clarity_${Date.now() + 1}`,
-              text: "How clear and sharp is your thinking right now?",
-              type: "scale", 
-              required: false
-            },
-            {
-              id: `appetite_${Date.now() + 2}`,
-              text: "How would you describe your appetite this morning?",
-              type: "multiple",
-              options: ["Very hungry", "Moderately hungry", "Not very hungry", "No appetite"],
-              required: false
-            },
-            {
-              id: `breathing_${Date.now() + 3}`,
-              text: "Is your breathing feeling comfortable and easy?",
-              type: "boolean",
-              required: false
-            }
-          ],
-          [
-            {
-              id: `balance_${Date.now()}`,
-              text: "How steady do you feel on your feet this morning?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `temperature_${Date.now() + 1}`,
-              text: "How do you feel about the room temperature right now?",
-              type: "multiple",
-              options: ["Too warm", "Just right", "Too cold", "Variable"],
-              required: false
-            },
-            {
-              id: `vision_${Date.now() + 2}`,
-              text: "How is your vision clarity this morning?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `mood_${Date.now() + 3}`,
-              text: "Are you feeling emotionally ready for the day?",
-              type: "boolean",
-              required: false
-            }
-          ],
-          [
-            {
-              id: `circulation_${Date.now()}`,
-              text: "How do your hands and feet feel right now?",
-              type: "multiple",
-              options: ["Warm and comfortable", "Slightly cool", "Cold", "Tingling or numb"],
-              required: false
-            },
-            {
-              id: `digest_${Date.now() + 1}`,
-              text: "How comfortable does your stomach feel?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `coordination_${Date.now() + 2}`,
-              text: "Do your movements feel smooth and coordinated?",
-              type: "boolean",
-              required: false
-            },
-            {
-              id: `alertness_${Date.now() + 3}`,
-              text: "Rate your mental alertness level right now",
-              type: "scale",
-              required: false
-            }
-          ],
-          [
-            {
-              id: `hearing_${Date.now()}`,
-              text: "How clear does your hearing feel this morning?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `dizziness_${Date.now() + 1}`,
-              text: "Are you experiencing any dizziness or lightheadedness?",
-              type: "boolean",
-              required: false
-            },
-            {
-              id: `motivation_${Date.now() + 2}`,
-              text: "How motivated do you feel to start your day?",
-              type: "multiple",
-              options: ["Very motivated", "Somewhat motivated", "Neutral", "Low motivation"],
-              required: false
-            },
-            {
-              id: `comfort_${Date.now() + 3}`,
-              text: "Rate your overall physical comfort level",
-              type: "scale",
-              required: false
-            }
-          ],
-          [
-            {
-              id: `headache_${Date.now()}`,
-              text: "Do you have any headache or head pressure?",
-              type: "boolean",
-              required: false
-            },
-            {
-              id: `stress_${Date.now() + 1}`,
-              text: "How would you rate your stress level upon waking?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `throat_${Date.now() + 2}`,
-              text: "How does your throat feel this morning?",
-              type: "multiple",
-              options: ["Normal and comfortable", "Slightly dry", "Sore or scratchy", "Very dry"],
-              required: false
-            },
-            {
-              id: `energy_${Date.now() + 3}`,
-              text: "Rate your sense of vitality and life energy",
-              type: "scale",
-              required: false
-            }
-          ],
-          [
-            {
-              id: `skin_${Date.now()}`,
-              text: "How does your skin feel this morning?",
-              type: "multiple",
-              options: ["Normal and comfortable", "Dry", "Itchy", "Sensitive"],
-              required: false
-            },
-            {
-              id: `posture_${Date.now() + 1}`,
-              text: "How comfortable do you feel when sitting or standing?",
-              type: "scale",
-              required: false
-            },
-            {
-              id: `nausea_${Date.now() + 2}`,
-              text: "Are you feeling any nausea or stomach uneasiness?",
-              type: "boolean",
-              required: false
-            },
-            {
-              id: `focus_${Date.now() + 3}`,
-              text: "Rate your ability to concentrate right now",
-              type: "scale",
-              required: false
-            }
-          ]
-        ]
-        
-        const randomFallback = fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)]
-        
-        const todayQuestions = {
-          date: today,
-          questions: randomFallback,
           generated: new Date().toISOString(),
-          fallback: true
+          source: 'ai'
         }
         
-        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 9)])
+        // Replace the fallback questions with AI-generated ones
+        setDailyQuestions((prev: any[]) => [aiQuestions, ...prev.filter((q: any) => q.date !== today)])
+        
+      } catch (error) {
+        console.error('AI question generation failed, using fallback:', error)
+        // Fallback questions are already set above, so no action needed
       }
     }
 
     generateDailyQuestions()
   }, [today, dailyQuestions, setDailyQuestions])
+
+  // Optimized fallback question function
+  const getRandomFallbackQuestions = () => {
+    const fallbackOptions = [
+      [
+        {
+          id: `hydration_${Date.now()}`,
+          text: "오늘 아침 목마름은 어느 정도인가요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `clarity_${Date.now() + 1}`,
+          text: "지금 머리가 얼마나 맑고 또렷한가요?",
+          type: "scale", 
+          required: false
+        },
+        {
+          id: `appetite_${Date.now() + 2}`,
+          text: "오늘 아침 식욕은 어떤가요?",
+          type: "multiple",
+          options: ["매우 좋음", "보통", "별로 없음", "전혀 없음"],
+          required: false
+        },
+        {
+          id: `breathing_${Date.now() + 3}`,
+          text: "숨쉬기가 편안하고 자연스러운가요?",
+          type: "boolean",
+          required: false
+        }
+      ],
+      [
+        {
+          id: `balance_${Date.now()}`,
+          text: "서거나 걸을 때 균형감은 어떤가요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `temperature_${Date.now() + 1}`,
+          text: "지금 실내 온도는 어떻게 느껴지나요?",
+          type: "multiple",
+          options: ["너무 따뜻함", "적당함", "너무 추움", "자주 변함"],
+          required: false
+        },
+        {
+          id: `vision_${Date.now() + 2}`,
+          text: "오늘 아침 시야가 얼마나 선명한가요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `mood_${Date.now() + 3}`,
+          text: "하루를 시작할 마음의 준비가 되셨나요?",
+          type: "boolean",
+          required: false
+        }
+      ],
+      [
+        {
+          id: `circulation_${Date.now()}`,
+          text: "손발의 감각은 어떤가요?",
+          type: "multiple",
+          options: ["따뜻하고 편함", "약간 시원함", "차가움", "저림이나 무감각"],
+          required: false
+        },
+        {
+          id: `digest_${Date.now() + 1}`,
+          text: "위장 상태는 얼마나 편안한가요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `coordination_${Date.now() + 2}`,
+          text: "움직임이 자연스럽고 매끄러운가요?",
+          type: "boolean",
+          required: false
+        },
+        {
+          id: `alertness_${Date.now() + 3}`,
+          text: "정신적 각성도는 어느 정도인가요?",
+          type: "scale",
+          required: false
+        }
+      ],
+      [
+        {
+          id: `hearing_${Date.now()}`,
+          text: "청력이 얼마나 선명하게 들리나요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `dizziness_${Date.now() + 1}`,
+          text: "어지럽거나 현기증이 있나요?",
+          type: "boolean",
+          required: false
+        },
+        {
+          id: `motivation_${Date.now() + 2}`,
+          text: "하루를 시작할 의욕은 어떤가요?",
+          type: "multiple",
+          options: ["매우 의욕적", "어느정도 의욕적", "보통", "의욕 부족"],
+          required: false
+        },
+        {
+          id: `comfort_${Date.now() + 3}`,
+          text: "전반적인 신체 편안함은 어떤가요?",
+          type: "scale",
+          required: false
+        }
+      ],
+      [
+        {
+          id: `headache_${Date.now()}`,
+          text: "두통이나 머리 압박감이 있나요?",
+          type: "boolean",
+          required: false
+        },
+        {
+          id: `stress_${Date.now() + 1}`,
+          text: "기상 후 스트레스 수준은 어떤가요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `throat_${Date.now() + 2}`,
+          text: "목 상태는 어떤가요?",
+          type: "multiple",
+          options: ["정상적이고 편함", "약간 건조함", "아프거나 따끔함", "매우 건조함"],
+          required: false
+        },
+        {
+          id: `energy_${Date.now() + 3}`,
+          text: "생명력과 활력은 어느 정도인가요?",
+          type: "scale",
+          required: false
+        }
+      ],
+      [
+        {
+          id: `skin_${Date.now()}`,
+          text: "오늘 아침 피부 상태는 어떤가요?",
+          type: "multiple",
+          options: ["정상적이고 편함", "건조함", "가려움", "민감함"],
+          required: false
+        },
+        {
+          id: `posture_${Date.now() + 1}`,
+          text: "앉거나 설 때 자세가 얼마나 편한가요?",
+          type: "scale",
+          required: false
+        },
+        {
+          id: `nausea_${Date.now() + 2}`,
+          text: "메스꺼움이나 속 불편함이 있나요?",
+          type: "boolean",
+          required: false
+        },
+        {
+          id: `focus_${Date.now() + 3}`,
+          text: "집중력은 어느 정도인가요?",
+          type: "scale",
+          required: false
+        }
+      ]
+    ]
+    
+    return fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)]
+  }
+
+  return (
 
   const getTodaysQuestions = (): DailyQuestion[] => {
     const todayQs = dailyQuestions.find((q: any) => q.date === today)
@@ -503,9 +449,8 @@ Ensure each of the 4 questions targets a completely different health aspect and 
   }
 
   const handleNext = () => {
-    const todaysQuestions = getTodaysQuestions()
-    // Always expect 4 AI questions, even if they're still loading
-    const totalSteps = 7 + 4 // Basic 7 steps + 4 AI questions (fixed count)
+    // Always expect 4 AI questions (fixed count)
+    const totalSteps = 7 + 4 // Basic 7 steps + 4 AI questions
     
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1)
@@ -558,10 +503,6 @@ Ensure each of the 4 questions targets a completely different health aspect and 
   }
 
   const canProceed = () => {
-    const todaysQuestions = getTodaysQuestions()
-    // Always expect 4 AI questions, even if still loading
-    const totalSteps = 7 + 4 // Fixed count for consistency
-    
     switch (currentStep) {
       case 0: return data.sleep !== null
       case 1: return true // weight is optional
@@ -573,12 +514,13 @@ Ensure each of the 4 questions targets a completely different health aspect and 
       default: 
         // AI questions (steps 7-10 for 4 questions)
         const questionIndex = currentStep - 7
-        if (questionIndex < 4) { // Always allow 4 questions
+        if (questionIndex < 4) {
+          const todaysQuestions = getTodaysQuestions()
           if (questionIndex < todaysQuestions.length) {
             const question = todaysQuestions[questionIndex]
             return !question.required || data.additionalQuestions[question.id] !== undefined
           }
-          // If questions are still loading, allow proceeding
+          // If questions are still loading or not available, allow proceeding
           return true
         }
         return true
@@ -779,12 +721,12 @@ Ensure each of the 4 questions targets a completely different health aspect and 
         const todaysQuestions = getTodaysQuestions()
         const questionIndex = currentStep - 7
         
-        // Show loading state if questions are still being generated
-        if (questionIndex < 4 && questionIndex >= todaysQuestions.length) {
+        // Show loading state only if no questions are available at all
+        if (questionIndex < 4 && todaysQuestions.length === 0) {
           return (
             <div className="space-y-4 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground">오늘의 맞춤 질문을 생성하고 있습니다...</p>
+              <p className="text-muted-foreground">맞춤 질문을 준비하고 있습니다...</p>
             </div>
           )
         }
