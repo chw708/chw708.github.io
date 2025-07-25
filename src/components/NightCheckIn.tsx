@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { useKV } from '@github/spark/hooks'
-import { getTodayDateString } from '@/lib/utils'
+import { getTodayDateString, isToday } from '@/lib/utils'
 
 interface NightCheckInProps {
   onComplete: () => void
@@ -68,13 +68,9 @@ export default function NightCheckIn({ onComplete, onBack }: NightCheckInProps) 
   const today = getTodayDateString()
   
   // Check if we have an entry for today
-  const hasTodayNight = nightHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
+  const hasTodayNight = nightHistory.some((entry: any) => isToday(entry.date))
   
-  const [existingEntry] = nightHistory.filter((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
+  const [existingEntry] = nightHistory.filter((entry: any) => isToday(entry.date))
 
   // Initialize with existing data if available
   const [data, setData] = useState<NightData>(() => {
@@ -181,10 +177,7 @@ Create a supportive summary that acknowledges their experiences and ends on a ho
     
     // Remove any existing entry for today and add the new one
     setNightHistory((prev: any[]) => {
-      const currentToday = getTodayDateString() // Fresh calculation
-      const filteredHistory = prev.filter((entry: any) => 
-        new Date(entry.date).toDateString() !== currentToday
-      )
+      const filteredHistory = prev.filter((entry: any) => !isToday(entry.date))
       return [newEntry, ...filteredHistory]
     })
     

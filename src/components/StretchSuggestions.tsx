@@ -43,14 +43,20 @@ const stretchDatabase: Record<string, string[]> = {
 export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestionsProps) {
   const uniqueAreas = [...new Set(stiffnessAreas.filter(area => area !== 'None' && stretchDatabase[area]))]
   
-  const relevantStretches = uniqueAreas.map((area, index) => {
+  const relevantStretches = uniqueAreas.map((area, areaIndex) => {
     const stretches = stretchDatabase[area]
-    // Use daily seed plus area-specific hash to ensure different stretches for different areas
+    // Use today's date + unique area hash to ensure different stretches for different areas
     const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
-    // Create a better hash using area name length and character codes
-    const areaHash = area.split('').reduce((hash, char, i) => hash + char.charCodeAt(0) * (i + 1), 0)
-    const stretchIndex = (dayOfYear + areaHash + index * 17) % stretches.length // Add index*17 for more variation
+    
+    // Create a better hash that's unique per area using area characters and position
+    const areaHash = area.split('').reduce((hash, char, charIndex) => {
+      return hash + char.charCodeAt(0) * (charIndex + 1) * 37
+    }, 0)
+    
+    // Use area index, area hash, and day to create truly unique selection per area
+    const stretchIndex = (dayOfYear + areaHash + areaIndex * 73) % stretches.length
     const selectedStretch = stretches[stretchIndex]
+    
     return { area, stretch: selectedStretch }
   })
 

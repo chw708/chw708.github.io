@@ -2,7 +2,7 @@ import { Heart, Sun, Moon, Bowl } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useKV } from '@github/spark/hooks'
-import { getTodayDateString } from '@/lib/utils'
+import { getTodayDateString, isToday } from '@/lib/utils'
 
 interface HomePageProps {
   onNavigate: (page: string) => void
@@ -16,15 +16,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   const currentDate = getTodayDateString()
 
   // Check actual data presence for today - real-time
-  const hasTodayMorning = morningHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === currentDate
-  )
-  const hasTodayMidday = middayHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === currentDate
-  )
-  const hasTodayNight = nightHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === currentDate
-  )
+  const hasTodayMorning = morningHistory.some((entry: any) => isToday(entry.date))
+  const hasTodayMidday = middayHistory.some((entry: any) => isToday(entry.date))
+  const hasTodayNight = nightHistory.some((entry: any) => isToday(entry.date))
 
   const checkInButtons = [
     {

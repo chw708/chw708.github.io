@@ -10,6 +10,13 @@ export function getTodayDateString(): string {
   return new Date().toDateString()
 }
 
+// Utility function to check if a date is today
+export function isToday(dateString: string): boolean {
+  const today = new Date().toDateString()
+  const checkDate = new Date(dateString).toDateString()
+  return today === checkDate
+}
+
 // Utility function to check if check-ins have been reset for the current day
 export function shouldResetDailyCheckins(checkinDate: string): boolean {
   return checkinDate !== getTodayDateString()

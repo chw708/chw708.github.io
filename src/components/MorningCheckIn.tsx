@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useKV } from '@github/spark/hooks'
-import { getTodayDateString } from '@/lib/utils'
+import { getTodayDateString, isToday } from '@/lib/utils'
 import HealthScore from './HealthScore'
 import StretchSuggestions from './StretchSuggestions'
 
@@ -46,9 +46,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   // Get today's date
   const today = getTodayDateString()
   
-  const [existingEntry] = morningHistory.filter((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
+  const [existingEntry] = morningHistory.filter((entry: any) => isToday(entry.date))
 
   // Initialize with existing data if available
   const [data, setData] = useState<MorningData>(() => {
@@ -83,7 +81,17 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       if (existingQuestions) return
 
       try {
-        const prompt = spark.llmPrompt`Generate 2-3 unique daily health assessment questions for a morning check-in on ${new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}. These should be DIFFERENT from standard questions about sleep, weight, fatigue, stiffness, blood pressure, and blood sugar.
+        // Get last few days of questions to avoid repetition
+        const recentQuestions = dailyQuestions.slice(0, 3).flatMap((q: any) => 
+          q.questions?.map((question: any) => question.text) || []
+        ).join('\n- ')
+
+        const prompt = spark.llmPrompt`Generate 2-3 unique daily health assessment questions for a morning check-in on ${new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}. 
+
+IMPORTANT: These should be completely DIFFERENT from these recent questions used in past few days:
+${recentQuestions ? `- ${recentQuestions}` : 'No recent questions found'}
+
+Also ensure they are DIFFERENT from the standard questions about sleep, weight, fatigue, stiffness, blood pressure, and blood sugar.
 
 Focus on varied aspects of daily health such as:
 - Hydration awareness and thirst levels
@@ -97,15 +105,21 @@ Focus on varied aspects of daily health such as:
 - Mental clarity and focus
 - Physical comfort while sitting/standing
 - Minor symptoms awareness
+- Skin health and sensitivity
+- Eye strain or vision comfort
+- Hearing clarity
+- Sleep quality (dreams, restfulness)
+- Physical activity readiness
 
 Create questions that are:
 - Simple and easy to understand
 - Relevant to elderly and health-conscious users
-- Different from yesterday's questions
+- Different from recent days' questions
 - Compassionate in tone
 - Focused on immediate physical/mental sensations
+- Diverse in the health aspects they cover
 
-Return a JSON array with questions in this exact format:
+Return a JSON array with 2-3 questions in this exact format:
 [
   {"id": "hydration_${Date.now()}", "text": "How is your thirst level this morning?", "type": "scale", "required": false},
   {"id": "appetite_${Date.now() + 1}", "text": "How would you describe your appetite today?", "type": "multiple", "options": ["Strong", "Normal", "Weak", "No appetite"], "required": false}
@@ -130,6 +144,29 @@ Make each question unique and meaningful for health tracking.`
         setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 6)]) // Keep last 7 days
       } catch (error) {
         console.error('Failed to generate questions:', error)
+        // Fallback questions if AI fails
+        const fallbackQuestions = [
+          {
+            id: `balance_${Date.now()}`,
+            text: "How steady do you feel on your feet this morning?",
+            type: "scale",
+            required: false
+          },
+          {
+            id: `appetite_${Date.now() + 1}`,
+            text: "How would you describe your appetite today?",
+            type: "multiple",
+            options: ["Strong", "Normal", "Weak", "No appetite"],
+            required: false
+          }
+        ]
+        
+        const todayQuestions = {
+          date: today,
+          questions: fallbackQuestions
+        }
+        
+        setDailyQuestions((prev: any[]) => [todayQuestions, ...prev.slice(0, 6)])
       }
     }
 
@@ -144,29 +181,33 @@ Make each question unique and meaningful for health tracking.`
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 85 // Start with a higher base score to be less sensitive
+    let score = 90 // Start with an even higher base score to be less sensitive
     
-    // Sleep score (0-10 points) - very forgiving ranges
+    // Sleep score (0-8 points) - very forgiving ranges
     if (data.sleep !== null) {
-      if (data.sleep < 4 || data.sleep > 11) score -= 8
-      else if (data.sleep < 5 || data.sleep > 10) score -= 4
+      if (data.sleep < 3 || data.sleep > 12) score -= 8
+      else if (data.sleep < 4 || data.sleep > 11) score -= 4
+      else if (data.sleep < 5 || data.sleep > 10) score -= 2
       else if (data.sleep < 6 || data.sleep > 9) score -= 1
       // 6-9 hours gets no penalty (very forgiving range)
     }
     
-    // Fatigue score (0-10 points) - very forgiving
+    // Fatigue score (0-8 points) - very forgiving
     if (data.fatigue !== null) {
-      if (data.fatigue > 8) score -= 8
-      else if (data.fatigue > 6) score -= 3
-      // Only penalize if fatigue > 6, gentler penalty
+      if (data.fatigue > 9) score -= 8
+      else if (data.fatigue > 7) score -= 4
+      else if (data.fatigue > 6) score -= 1
+      // Only penalize if fatigue > 6, very gentle penalty
     }
     
-    // Swelling penalty (0-3 points) - minimal impact
-    if (data.swelling) score -= 3
+    // Swelling penalty (0-2 points) - minimal impact
+    if (data.swelling) score -= 2
     
-    // Stiffness penalty (0-7 points) - reduced and capped
+    // Stiffness penalty (0-5 points) - very reduced and capped
     const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
-    score -= Math.min(7, stiffnessCount * 1) // Very gentle penalty, capped at 7 points
+    if (stiffnessCount > 3) score -= 5
+    else if (stiffnessCount > 1) score -= 2
+    else if (stiffnessCount === 1) score -= 1
     
     // Bonus for completing additional questions
     const additionalAnswered = Object.keys(data.additionalQuestions).length
@@ -175,7 +216,7 @@ Make each question unique and meaningful for health tracking.`
     // Extra bonus for vitals tracking
     if (data.bloodPressure || data.bloodSugar) score += 3
     
-    return Math.max(65, Math.min(100, score)) // Minimum score of 65, higher floor
+    return Math.max(70, Math.min(100, score)) // Minimum score of 70, higher floor
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
@@ -230,10 +271,7 @@ Make each question unique and meaningful for health tracking.`
       
       // Remove any existing entry for today and add the new one
       setMorningHistory((prev: any[]) => {
-        const currentToday = getTodayDateString() // Fresh calculation
-        const filteredHistory = prev.filter((entry: any) => 
-          new Date(entry.date).toDateString() !== currentToday
-        )
+        const filteredHistory = prev.filter((entry: any) => !isToday(entry.date))
         return [newEntry, ...filteredHistory]
       })
       

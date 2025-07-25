@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useKV } from '@github/spark/hooks'
-import { getTodayDateString } from '@/lib/utils'
+import { getTodayDateString, isToday } from '@/lib/utils'
 import HealthScore from './HealthScore'
 
 interface DashboardProps {
@@ -19,20 +19,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const today = getTodayDateString()
 
   // Check if there are entries for today in each history - real-time check
-  const hasTodayMorning = morningHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
-  const hasTodayMidday = middayHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
-  const hasTodayNight = nightHistory.some((entry: any) => 
-    new Date(entry.date).toDateString() === today
-  )
+  const hasTodayMorning = morningHistory.some((entry: any) => isToday(entry.date))
+  const hasTodayMidday = middayHistory.some((entry: any) => isToday(entry.date))
+  const hasTodayNight = nightHistory.some((entry: any) => isToday(entry.date))
 
   const getCurrentHealthScore = () => {
-    const todayEntry = morningHistory.find((entry: any) => 
-      new Date(entry.date).toDateString() === today
-    )
+    const todayEntry = morningHistory.find((entry: any) => isToday(entry.date))
     return todayEntry?.healthScore || 75
   }
 
@@ -96,9 +88,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }
 
   const getLatestQuote = () => {
-    const todayEntry = nightHistory.find((entry: any) => 
-      new Date(entry.date).toDateString() === today
-    )
+    const todayEntry = nightHistory.find((entry: any) => isToday(entry.date))
     if (todayEntry?.dailyQuote) {
       return todayEntry.dailyQuote
     }
@@ -177,11 +167,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm font-medium text-green-800">Morning Check-in Complete</p>
                     <p className="text-xs text-green-600">
-                      Sleep: {morningHistory.find((entry: any) => 
-                        new Date(entry.date).toDateString() === today
-                      )?.sleep}h • Health Score: {morningHistory.find((entry: any) => 
-                        new Date(entry.date).toDateString() === today
-                      )?.healthScore}
+                      Sleep: {morningHistory.find((entry: any) => isToday(entry.date))?.sleep}h • Health Score: {morningHistory.find((entry: any) => isToday(entry.date))?.healthScore}
                     </p>
                   </div>
                 )}
@@ -190,11 +176,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <p className="text-sm font-medium text-orange-800">Midday Log Complete</p>
                     <p className="text-xs text-orange-600">
-                      Meals: {middayHistory.find((entry: any) => 
-                        new Date(entry.date).toDateString() === today
-                      )?.meals?.length || 0} • Mood: {middayHistory.find((entry: any) => 
-                        new Date(entry.date).toDateString() === today
-                      )?.mood}
+                      Meals: {middayHistory.find((entry: any) => isToday(entry.date))?.meals?.length || 0} • Mood: {middayHistory.find((entry: any) => isToday(entry.date))?.mood}
                     </p>
                   </div>
                 )}
@@ -203,9 +185,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <p className="text-sm font-medium text-purple-800">Night Reflection Complete</p>
                     <p className="text-xs text-purple-600">
-                      Stress Level: {nightHistory.find((entry: any) => 
-                        new Date(entry.date).toDateString() === today
-                      )?.reflections?.stressLevel}/10
+                      Stress Level: {nightHistory.find((entry: any) => isToday(entry.date))?.reflections?.stressLevel}/10
                     </p>
                   </div>
                 )}
@@ -215,11 +195,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     <p className="text-muted-foreground">
                       No check-ins completed today yet. Start with your morning check-in!
                     </p>
-                    {process.env.NODE_ENV === 'development' && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Debug: Morning: {morningHistory.length}, Midday: {middayHistory.length}, Night: {nightHistory.length}
-                      </p>
-                    )}
                   </div>
                 )}
               </CardContent>
