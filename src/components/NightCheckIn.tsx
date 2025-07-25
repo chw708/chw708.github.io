@@ -70,7 +70,7 @@ export default function NightCheckIn({ onComplete, onBack }: NightCheckInProps) 
   // Check if we have an entry for today
   const hasTodayNight = nightHistory.some((entry: any) => isToday(entry.date))
   
-  const [existingEntry] = nightHistory.filter((entry: any) => isToday(entry.date))
+  const existingEntry = nightHistory.find((entry: any) => isToday(entry.date))
 
   // Initialize with existing data if available
   const [data, setData] = useState<NightData>(() => {

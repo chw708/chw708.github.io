@@ -46,7 +46,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   // Get today's date
   const today = getTodayDateString()
   
-  const [existingEntry] = morningHistory.filter((entry: any) => isToday(entry.date))
+  const existingEntry = morningHistory.find((entry: any) => isToday(entry.date))
 
   // Initialize with existing data if available
   const [data, setData] = useState<MorningData>(() => {

@@ -38,7 +38,7 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
   // Get today's date  
   const today = getTodayDateString()
   
-  const [existingEntry] = middayHistory.filter((entry: any) => isToday(entry.date))
+  const existingEntry = middayHistory.find((entry: any) => isToday(entry.date))
 
   // Initialize with existing data if available
   const [data, setData] = useState<MiddayData>(() => {
