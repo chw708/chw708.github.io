@@ -30,15 +30,7 @@ const stiffnessOptions = [
 
 export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [data, setData] = useState<MorningData>({
-    sleep: null,
-    weight: null,
-    swelling: false,
-    fatigue: null,
-    stiffness: [],
-    bloodPressure: '',
-    bloodSugar: ''
-  })
+  const [morningHistory, setMorningHistory] = useKV('morning-history', [])
 
   const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
     morning: false,
@@ -47,32 +39,35 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
     date: new Date().toDateString()
   })
 
-  const [morningHistory, setMorningHistory] = useKV('morning-history', [])
-
-  // Check if morning check-in already completed today
+  // Get today's existing data if any
   const today = new Date().toDateString()
-  const alreadyCompleted = todayCheckins.date === today && todayCheckins.morning
+  const [existingEntry] = morningHistory.filter((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
 
-  if (alreadyCompleted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="bg-green-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Heart size={32} className="text-green-600" weight="fill" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Already Complete!</h2>
-            <p className="text-muted-foreground mb-6">
-              You've already completed your morning check-in today. Come back tomorrow for your next check-in.
-            </p>
-            <Button onClick={onBack} className="w-full">
-              Back to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Initialize with existing data if available
+  const [data, setData] = useState<MorningData>(() => {
+    if (existingEntry) {
+      return {
+        sleep: existingEntry.sleep,
+        weight: existingEntry.weight,
+        swelling: existingEntry.swelling,
+        fatigue: existingEntry.fatigue,
+        stiffness: existingEntry.stiffness,
+        bloodPressure: existingEntry.bloodPressure,
+        bloodSugar: existingEntry.bloodSugar
+      }
+    }
+    return {
+      sleep: null,
+      weight: null,
+      swelling: false,
+      fatigue: null,
+      stiffness: [],
+      bloodPressure: '',
+      bloodSugar: ''
+    }
+  })
 
   const calculateHealthScore = (data: MorningData): number => {
     let score = 100
@@ -143,10 +138,15 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
         advice
       }
       
-      setMorningHistory((prev: any[]) => [newEntry, ...prev])
+      // Remove any existing entry for today and add the new one
+      setMorningHistory((prev: any[]) => {
+        const filteredHistory = prev.filter((entry: any) => 
+          new Date(entry.date).toDateString() !== today
+        )
+        return [newEntry, ...filteredHistory]
+      })
       
       // Mark morning as complete for today
-      const today = new Date().toDateString()
       setTodayCheckins((prev: any) => ({
         ...prev,
         morning: true,

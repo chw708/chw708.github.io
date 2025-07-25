@@ -31,13 +31,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     }
   }, [currentDate, isToday, setTodayData])
 
-  // Use current state for display
-  const currentDayData = isToday ? todayData : {
-    morning: false,
-    midday: false,
-    night: false,
-    date: currentDate
-  }
+  // Use current state for display - always show real-time data
+  const currentDayData = todayData
 
   const checkInButtons = [
     {
@@ -100,9 +95,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               <CardContent className="p-0">
                 <Button
                   variant="ghost"
-                  onClick={() => !checkIn.completed && onNavigate(checkIn.id)}
-                  disabled={checkIn.completed}
-                  className="w-full h-auto p-4 justify-start text-left hover:bg-accent/50 disabled:opacity-60"
+                  onClick={() => onNavigate(checkIn.id)}
+                  className="w-full h-auto p-4 justify-start text-left hover:bg-accent/50"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-full ${checkIn.color}`}>

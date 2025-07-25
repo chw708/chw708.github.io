@@ -25,31 +25,40 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const today = new Date().toDateString()
   const isToday = todayCheckins.date === today
 
-  // Use effect to reset checkins for new day
+  // Check if there are entries for today in each history
+  const hasTodayMorning = morningHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
+  const hasTodayMidday = middayHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
+  const hasTodayNight = nightHistory.some((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
+
+  // Update checkins state based on actual data presence
   useEffect(() => {
-    if (!isToday) {
-      setTodayCheckins({
-        morning: false,
-        midday: false,
-        night: false,
-        date: today
-      })
-    }
-  }, [today, isToday, setTodayCheckins])
+    setTodayCheckins((prev: any) => ({
+      morning: hasTodayMorning,
+      midday: hasTodayMidday,
+      night: hasTodayNight,
+      date: today
+    }))
+  }, [hasTodayMorning, hasTodayMidday, hasTodayNight, today, setTodayCheckins])
 
   // Use current day checkins for display
-  const currentDayCheckins = isToday ? todayCheckins : {
-    morning: false,
-    midday: false,
-    night: false,
+  const currentDayCheckins = {
+    morning: hasTodayMorning,
+    midday: hasTodayMidday,
+    night: hasTodayNight,
     date: today
   }
 
   const getCurrentHealthScore = () => {
-    if (morningHistory.length > 0) {
-      return morningHistory[0].healthScore || 75
-    }
-    return 75
+    const todayEntry = morningHistory.find((entry: any) => 
+      new Date(entry.date).toDateString() === today
+    )
+    return todayEntry?.healthScore || 75
   }
 
   const getWeeklyData = () => {
@@ -112,8 +121,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }
 
   const getLatestQuote = () => {
-    if (nightHistory.length > 0 && nightHistory[0].dailyQuote) {
-      return nightHistory[0].dailyQuote
+    const todayEntry = nightHistory.find((entry: any) => 
+      new Date(entry.date).toDateString() === today
+    )
+    if (todayEntry?.dailyQuote) {
+      return todayEntry.dailyQuote
     }
     return "Every day is a new beginning. Take a deep breath, smile, and start again."
   }
@@ -186,29 +198,39 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {currentDayCheckins.morning && morningHistory.length > 0 && (
+                {currentDayCheckins.morning && hasTodayMorning && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm font-medium text-green-800">Morning Check-in Complete</p>
                     <p className="text-xs text-green-600">
-                      Sleep: {morningHistory[0].sleep}h • Health Score: {morningHistory[0].healthScore}
+                      Sleep: {morningHistory.find((entry: any) => 
+                        new Date(entry.date).toDateString() === today
+                      )?.sleep}h • Health Score: {morningHistory.find((entry: any) => 
+                        new Date(entry.date).toDateString() === today
+                      )?.healthScore}
                     </p>
                   </div>
                 )}
                 
-                {currentDayCheckins.midday && middayHistory.length > 0 && (
+                {currentDayCheckins.midday && hasTodayMidday && (
                   <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                     <p className="text-sm font-medium text-orange-800">Midday Log Complete</p>
                     <p className="text-xs text-orange-600">
-                      Meals: {middayHistory[0].meals?.length || 0} • Mood: {middayHistory[0].mood}
+                      Meals: {middayHistory.find((entry: any) => 
+                        new Date(entry.date).toDateString() === today
+                      )?.meals?.length || 0} • Mood: {middayHistory.find((entry: any) => 
+                        new Date(entry.date).toDateString() === today
+                      )?.mood}
                     </p>
                   </div>
                 )}
                 
-                {currentDayCheckins.night && nightHistory.length > 0 && (
+                {currentDayCheckins.night && hasTodayNight && (
                   <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <p className="text-sm font-medium text-purple-800">Night Reflection Complete</p>
                     <p className="text-xs text-purple-600">
-                      Stress Level: {nightHistory[0].reflections?.stressLevel}/10
+                      Stress Level: {nightHistory.find((entry: any) => 
+                        new Date(entry.date).toDateString() === today
+                      )?.reflections?.stressLevel}/10
                     </p>
                   </div>
                 )}

@@ -32,14 +32,7 @@ const moodEmojis = [
 ]
 
 export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps) {
-  const [data, setData] = useState<MiddayData>({
-    meals: [],
-    symptoms: '',
-    mood: ''
-  })
-
-  const [newMeal, setNewMeal] = useState({ name: '', description: '' })
-  const [showMealForm, setShowMealForm] = useState(false)
+  const [middayHistory, setMiddayHistory] = useKV('midday-history', [])
 
   const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
     morning: false,
@@ -48,32 +41,30 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
     date: new Date().toDateString()
   })
 
-  const [middayHistory, setMiddayHistory] = useKV('midday-history', [])
-
-  // Check if midday check-in already completed today
+  // Get today's existing data if any
   const today = new Date().toDateString()
-  const alreadyCompleted = todayCheckins.date === today && todayCheckins.midday
+  const [existingEntry] = middayHistory.filter((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
 
-  if (alreadyCompleted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="bg-orange-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Camera size={32} className="text-orange-600" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Already Complete!</h2>
-            <p className="text-muted-foreground mb-6">
-              You've already completed your midday check-in today. Come back tomorrow for your next check-in.
-            </p>
-            <Button onClick={onBack} className="w-full">
-              Back to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Initialize with existing data if available
+  const [data, setData] = useState<MiddayData>(() => {
+    if (existingEntry) {
+      return {
+        meals: existingEntry.meals || [],
+        symptoms: existingEntry.symptoms || '',
+        mood: existingEntry.mood || ''
+      }
+    }
+    return {
+      meals: [],
+      symptoms: '',
+      mood: ''
+    }
+  })
+
+  const [newMeal, setNewMeal] = useState({ name: '', description: '' })
+  const [showMealForm, setShowMealForm] = useState(false)
 
   const addMeal = () => {
     if (newMeal.name.trim()) {
@@ -103,10 +94,15 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
       ...data
     }
     
-    setMiddayHistory((prev: any[]) => [newEntry, ...prev])
+    // Remove any existing entry for today and add the new one
+    setMiddayHistory((prev: any[]) => {
+      const filteredHistory = prev.filter((entry: any) => 
+        new Date(entry.date).toDateString() !== today
+      )
+      return [newEntry, ...filteredHistory]
+    })
     
     // Mark midday as complete for today
-    const today = new Date().toDateString()
     setTodayCheckins((prev: any) => ({
       ...prev,
       midday: true,

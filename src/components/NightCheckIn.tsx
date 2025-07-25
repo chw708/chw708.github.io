@@ -61,18 +61,44 @@ const dailyQuotes = [
 
 export default function NightCheckIn({ onComplete, onBack }: NightCheckInProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [data, setData] = useState<NightData>({
-    stressJournal: '',
-    aiResponse: '',
-    reflections: {
-      happiness: '',
-      stressLevel: null,
-      connection: '',
-      gratitude: '',
-      tomorrow: ''
-    },
-    emotionalSummary: '',
-    dailyQuote: ''
+  const [nightHistory, setNightHistory] = useKV('night-history', [])
+
+  // Get today's existing data if any
+  const today = new Date().toDateString()
+  const [existingEntry] = nightHistory.filter((entry: any) => 
+    new Date(entry.date).toDateString() === today
+  )
+
+  // Initialize with existing data if available
+  const [data, setData] = useState<NightData>(() => {
+    if (existingEntry) {
+      return {
+        stressJournal: existingEntry.stressJournal || '',
+        aiResponse: existingEntry.aiResponse || '',
+        reflections: existingEntry.reflections || {
+          happiness: '',
+          stressLevel: null,
+          connection: '',
+          gratitude: '',
+          tomorrow: ''
+        },
+        emotionalSummary: existingEntry.emotionalSummary || '',
+        dailyQuote: existingEntry.dailyQuote || ''
+      }
+    }
+    return {
+      stressJournal: '',
+      aiResponse: '',
+      reflections: {
+        happiness: '',
+        stressLevel: null,
+        connection: '',
+        gratitude: '',
+        tomorrow: ''
+      },
+      emotionalSummary: '',
+      dailyQuote: ''
+    }
   })
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false)
 
@@ -82,33 +108,6 @@ export default function NightCheckIn({ onComplete, onBack }: NightCheckInProps) 
     night: false,
     date: new Date().toDateString()
   })
-
-  const [nightHistory, setNightHistory] = useKV('night-history', [])
-
-  // Check if night check-in already completed today
-  const today = new Date().toDateString()
-  const alreadyCompleted = todayCheckins.date === today && todayCheckins.night
-
-  if (alreadyCompleted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="bg-purple-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Heart size={32} className="text-purple-600" weight="fill" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Already Complete!</h2>
-            <p className="text-muted-foreground mb-6">
-              You've already completed your night reflection today. Sweet dreams and see you tomorrow!
-            </p>
-            <Button onClick={onBack} className="w-full">
-              Back to Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   const generateAIResponse = async (stressText: string): Promise<string> => {
     if (!stressText.trim()) {
@@ -180,10 +179,15 @@ Create a supportive summary that acknowledges their experiences and ends on a ho
       ...finalData
     }
     
-    setNightHistory((prev: any[]) => [newEntry, ...prev])
+    // Remove any existing entry for today and add the new one
+    setNightHistory((prev: any[]) => {
+      const filteredHistory = prev.filter((entry: any) => 
+        new Date(entry.date).toDateString() !== today
+      )
+      return [newEntry, ...filteredHistory]
+    })
     
     // Mark night as complete for today
-    const today = new Date().toDateString()
     setTodayCheckins((prev: any) => ({
       ...prev,
       night: true,
