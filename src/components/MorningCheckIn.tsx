@@ -362,7 +362,7 @@ Ensure each of the 4 questions targets a completely different health aspect and 
   }
 
   const calculateHealthScore = (data: MorningData): number => {
-    let score = 85 // Start with moderate base score for accurate assessment
+    let score = 80 // Start with moderate base score for accurate assessment
     
     // Sleep score (0-12 points) - realistic sleep assessment
     if (data.sleep !== null) {
@@ -392,15 +392,78 @@ Ensure each of the 4 questions targets a completely different health aspect and 
     else if (stiffnessCount >= 1) score -= 2 // Some stiffness
     // No stiffness gets no penalty
     
-    // Moderate bonuses for engagement (4 AI questions expected)
-    const additionalAnswered = Object.keys(data.additionalQuestions).length
-    score += additionalAnswered * 1 // Small bonus for answering AI questions
+    // AI Questions impact (0-15 points) - significant contribution to health assessment
+    const additionalAnswers = data.additionalQuestions
+    let aiQuestionsScore = 0
+    let aiQuestionsCount = 0
+    
+    Object.entries(additionalAnswers).forEach(([questionId, answer]) => {
+      aiQuestionsCount++
+      
+      if (typeof answer === 'number') {
+        // Scale questions (1-10): normalize to health impact
+        if (answer >= 8) aiQuestionsScore += 4 // Very positive
+        else if (answer >= 6) aiQuestionsScore += 2 // Positive
+        else if (answer >= 4) aiQuestionsScore += 0 // Neutral
+        else if (answer >= 2) aiQuestionsScore -= 2 // Concerning
+        else aiQuestionsScore -= 4 // Very concerning
+      } else if (typeof answer === 'boolean') {
+        // Boolean questions: context-dependent interpretation
+        const questionText = questionId.toLowerCase()
+        
+        // Positive health indicators (good if true)
+        if (questionText.includes('comfortable') || 
+            questionText.includes('ready') || 
+            questionText.includes('clear') || 
+            questionText.includes('smooth') ||
+            questionText.includes('motivated') ||
+            questionText.includes('steady')) {
+          aiQuestionsScore += answer ? 3 : -2
+        }
+        // Negative health indicators (bad if true)
+        else if (questionText.includes('pain') || 
+                 questionText.includes('dizz') || 
+                 questionText.includes('headache') || 
+                 questionText.includes('nausea') ||
+                 questionText.includes('pressure') ||
+                 questionText.includes('swelling')) {
+          aiQuestionsScore += answer ? -3 : 2
+        }
+        // Neutral interpretation for other boolean questions
+        else {
+          aiQuestionsScore += answer ? 1 : -1
+        }
+      } else if (typeof answer === 'string' && answer.trim()) {
+        // Multiple choice and text questions
+        const answerLower = answer.toLowerCase()
+        
+        // Evaluate based on common positive/negative keywords
+        if (answerLower.includes('very') && (answerLower.includes('good') || answerLower.includes('comfortable') || answerLower.includes('motivated'))) {
+          aiQuestionsScore += 4
+        } else if (answerLower.includes('good') || answerLower.includes('comfortable') || answerLower.includes('normal') || answerLower.includes('motivated')) {
+          aiQuestionsScore += 2
+        } else if (answerLower.includes('slight') || answerLower.includes('somewhat') || answerLower.includes('moderate')) {
+          aiQuestionsScore += 0
+        } else if (answerLower.includes('low') || answerLower.includes('poor') || answerLower.includes('tired') || answerLower.includes('cold') || answerLower.includes('dry')) {
+          aiQuestionsScore -= 2
+        } else if (answerLower.includes('very') && (answerLower.includes('poor') || answerLower.includes('bad') || answerLower.includes('tired'))) {
+          aiQuestionsScore -= 4
+        } else {
+          // Default neutral for unrecognized text
+          aiQuestionsScore += 1
+        }
+      }
+    })
+    
+    // Apply AI questions score with engagement bonus
+    score += aiQuestionsScore
+    score += aiQuestionsCount * 1 // Small engagement bonus for answering
     
     // Small bonus for vitals tracking
-    if (data.bloodPressure || data.bloodSugar) score += 1
+    if (data.bloodPressure || data.bloodSugar) score += 2
     
-    // Small completion bonus
-    score += 1
+    // Completion bonus
+    score += 2
     
     return Math.max(50, Math.min(100, score)) // Minimum score of 50, allows for realistic range
   }
