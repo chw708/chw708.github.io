@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { useKV } from '@github/spark/hooks'
+import { getTodayDateString } from '@/lib/utils'
 
 interface NightCheckInProps {
   onComplete: () => void
@@ -64,7 +65,7 @@ export default function NightCheckIn({ onComplete, onBack }: NightCheckInProps) 
   const [nightHistory, setNightHistory] = useKV('night-history', [])
 
   // Get today's existing data if any
-  const today = new Date().toDateString()
+  const today = getTodayDateString()
   
   // Check if we have an entry for today
   const hasTodayNight = nightHistory.some((entry: any) => 
@@ -107,24 +108,6 @@ export default function NightCheckIn({ onComplete, onBack }: NightCheckInProps) 
     }
   })
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false)
-
-  const [todayCheckins, setTodayCheckins] = useKV('today-checkins', {
-    morning: false,
-    midday: false,
-    night: false,
-    date: new Date().toDateString()
-  })
-
-  // Reset checkins for new day
-  useEffect(() => {
-    if (todayCheckins.date !== today) {
-      setTodayCheckins((prev: any) => ({
-        ...prev,
-        night: hasTodayNight,
-        date: today
-      }))
-    }
-  }, [today, todayCheckins.date, hasTodayNight, setTodayCheckins])
 
   const generateAIResponse = async (stressText: string): Promise<string> => {
     if (!stressText.trim()) {
@@ -198,21 +181,11 @@ Create a supportive summary that acknowledges their experiences and ends on a ho
     
     // Remove any existing entry for today and add the new one
     setNightHistory((prev: any[]) => {
+      const currentToday = getTodayDateString() // Fresh calculation
       const filteredHistory = prev.filter((entry: any) => 
-        new Date(entry.date).toDateString() !== today
+        new Date(entry.date).toDateString() !== currentToday
       )
       return [newEntry, ...filteredHistory]
-    })
-    
-    // Mark night as complete for today - use functional update
-    setTodayCheckins((prev: any) => {
-      const updatedCheckins = {
-        ...prev,
-        night: true,
-        date: today
-      }
-      console.log('Setting night complete:', updatedCheckins)
-      return updatedCheckins
     })
     
     setData(finalData)

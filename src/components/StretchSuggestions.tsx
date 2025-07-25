@@ -45,10 +45,11 @@ export default function StretchSuggestions({ stiffnessAreas }: StretchSuggestion
   
   const relevantStretches = uniqueAreas.map((area, index) => {
     const stretches = stretchDatabase[area]
-    // Use daily seed plus area index to ensure different stretches for different areas
+    // Use daily seed plus area-specific hash to ensure different stretches for different areas
     const dayOfYear = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
-    const areaHash = area.charCodeAt(0) * index // Simple hash based on area name and position
-    const stretchIndex = (dayOfYear + areaHash) % stretches.length
+    // Create a better hash using area name length and character codes
+    const areaHash = area.split('').reduce((hash, char, i) => hash + char.charCodeAt(0) * (i + 1), 0)
+    const stretchIndex = (dayOfYear + areaHash + index * 17) % stretches.length // Add index*17 for more variation
     const selectedStretch = stretches[stretchIndex]
     return { area, stretch: selectedStretch }
   })

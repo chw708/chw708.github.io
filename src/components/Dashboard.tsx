@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useKV } from '@github/spark/hooks'
+import { getTodayDateString } from '@/lib/utils'
 import HealthScore from './HealthScore'
 
 interface DashboardProps {
@@ -15,7 +16,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [middayHistory] = useKV('midday-history', [])
   const [nightHistory] = useKV('night-history', [])
   // Get today's date
-  const today = new Date().toDateString()
+  const today = getTodayDateString()
 
   // Check if there are entries for today in each history - real-time check
   const hasTodayMorning = morningHistory.some((entry: any) => 
@@ -210,9 +211,16 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 )}
 
                 {!hasTodayMorning && !hasTodayMidday && !hasTodayNight && (
-                  <p className="text-muted-foreground text-center py-4">
-                    No check-ins completed today yet. Start with your morning check-in!
-                  </p>
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">
+                      No check-ins completed today yet. Start with your morning check-in!
+                    </p>
+                    {process.env.NODE_ENV === 'development' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Debug: Morning: {morningHistory.length}, Midday: {middayHistory.length}, Night: {nightHistory.length}
+                      </p>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>

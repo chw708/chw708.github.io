@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useKV } from '@github/spark/hooks'
+import { getTodayDateString } from '@/lib/utils'
 
 interface MiddayCheckInProps {
   onComplete: () => void
@@ -35,7 +36,7 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
   const [middayHistory, setMiddayHistory] = useKV('midday-history', [])
 
   // Get today's date  
-  const today = new Date().toDateString()
+  const today = getTodayDateString()
   
   const [existingEntry] = middayHistory.filter((entry: any) => 
     new Date(entry.date).toDateString() === today
@@ -90,8 +91,9 @@ export default function MiddayCheckIn({ onComplete, onBack }: MiddayCheckInProps
     
     // Remove any existing entry for today and add the new one
     setMiddayHistory((prev: any[]) => {
+      const currentToday = getTodayDateString() // Fresh calculation
       const filteredHistory = prev.filter((entry: any) => 
-        new Date(entry.date).toDateString() !== today
+        new Date(entry.date).toDateString() !== currentToday
       )
       return [newEntry, ...filteredHistory]
     })

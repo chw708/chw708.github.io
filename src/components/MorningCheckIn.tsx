@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useKV } from '@github/spark/hooks'
+import { getTodayDateString } from '@/lib/utils'
 import HealthScore from './HealthScore'
 import StretchSuggestions from './StretchSuggestions'
 
@@ -43,7 +44,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   const [dailyQuestions, setDailyQuestions] = useKV('daily-questions', [])
 
   // Get today's date
-  const today = new Date().toDateString()
+  const today = getTodayDateString()
   
   const [existingEntry] = morningHistory.filter((entry: any) => 
     new Date(entry.date).toDateString() === today
@@ -229,8 +230,9 @@ Make each question unique and meaningful for health tracking.`
       
       // Remove any existing entry for today and add the new one
       setMorningHistory((prev: any[]) => {
+        const currentToday = getTodayDateString() // Fresh calculation
         const filteredHistory = prev.filter((entry: any) => 
-          new Date(entry.date).toDateString() !== today
+          new Date(entry.date).toDateString() !== currentToday
         )
         return [newEntry, ...filteredHistory]
       })
