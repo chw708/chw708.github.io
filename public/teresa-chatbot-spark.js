@@ -864,7 +864,41 @@ Provide empathy followed by practical advice:`;
       'Stomach issues or nausea',
       'Muscle aches or stiffness',
       'Difficulty sleeping',
+      'Feeling anxious or stressed',
+      'Other concern...'
     ];
+  }
+
+  /**
+   * Get localized text
+   */
+  getLocalizedText(key) {
+    const texts = {
+      en: {
+        greeting: "Hi, I'm Teresa, your health companion. What's bothering you today?",
+        askName: "What should I call you?",
+        thinking: "Teresa is thinking",
+        placeholder: "Type your message...",
+        send: "Send",
+        medicalInfo: "Would it be okay if I shared some general health information that might help?",
+        yesHelp: "Yes, that would help",
+        noSupport: "No, I'd prefer just emotional support",
+        error: "I'm sorry, I'm having trouble responding right now. Please try again in a moment."
+      },
+      ko: {
+        greeting: "안녕하세요, 저는 당신의 건강 동반자 테레사입니다. 오늘 무엇이 신경 쓰이시나요?",
+        askName: "어떻게 불러드리면 될까요?",
+        thinking: "테레사가 생각하고 있습니다",
+        placeholder: "메시지를 입력하세요...",
+        send: "전송",
+        medicalInfo: "도움이 될 만한 일반적인 건강 정보를 공유해도 될까요?",
+        yesHelp: "네, 도움이 될 것 같아요",
+        noSupport: "아니요, 감정적 지지만 받고 싶어요",
+        error: "죄송하지만 지금 응답하는 데 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+      }
+    };
+    
+    return texts[this.language]?.[key] || texts.en[key] || key;
   }
 
   /**

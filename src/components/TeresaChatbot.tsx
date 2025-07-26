@@ -32,7 +32,7 @@ export const useTeresaChatbot = () => {
     }
 
     // Check if the script is already in the DOM
-    const existingScript = document.querySelector('script[src="/src/teresa-chatbot-spark.js"]');
+    const existingScript = document.querySelector('script[src="/teresa-chatbot-spark.js"]');
     if (existingScript) {
       initialized.current = true;
       return;
@@ -40,7 +40,7 @@ export const useTeresaChatbot = () => {
 
     // Load the Spark-integrated chatbot script dynamically
     const script = document.createElement('script');
-    script.src = '/src/teresa-chatbot-spark.js';
+    script.src = '/teresa-chatbot-spark.js';
     script.async = true;
     script.defer = true;
     
