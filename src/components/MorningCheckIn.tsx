@@ -96,10 +96,26 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       
       setTimeout(async () => {
         try {
-          // Minimal context for fastest generation
-          const prompt = spark.llmPrompt`4개 한국어 간단 건강질문.
-주제: 수분, 호흡, 균형, 기분, 식욕, 편안함
-JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
+          // Professional health assessment questions
+          const prompt = spark.llmPrompt`당신은 전문 의료진입니다. 일반인의 일상 건강상태를 정확히 평가할 수 있는 전문적이고 구체적인 질문 4개를 한국어로 만들어주세요.
+
+다음 영역에서 선택하여 다양하고 의미있는 건강 지표를 평가해주세요:
+- 심혈관 건강: 호흡곤란, 가슴답답함, 어지러움, 심박수 변화
+- 신경계/인지기능: 집중력, 기억력, 균형감각, 두통
+- 소화계: 식욕, 소화불량, 복부불편감, 배변활동
+- 근골격계: 관절통증, 근육경직, 보행능력, 움직임 제한
+- 정신건강: 스트레스, 불안감, 우울감, 의욕
+- 수면/피로: 수면의 질, 꿈, 아침 기상감, 주간졸음
+- 전반적 컨디션: 면역력, 체온변화, 수분상태, 활력
+
+각 질문은:
+- 구체적이고 측정 가능해야 함
+- 일반인이 쉽게 이해할 수 있어야 함  
+- 의학적으로 의미있는 건강지표를 반영해야 함
+- 예/아니오, 1-10점 척도, 또는 선택지 형태로 답변 가능해야 함
+
+JSON 형식으로 응답해주세요:
+[{"id":"q${Date.now()}","text":"구체적인 건강 질문","type":"scale|boolean|multiple","options":["선택지1","선택지2"] (multiple인 경우만),"required":false}]`
           const response = await spark.llm(prompt, "gpt-4o-mini", true)
           
           const questions = JSON.parse(response)
@@ -130,36 +146,51 @@ JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
     generateDailyQuestions()
   }, []) // Remove dependencies to prevent re-runs
 
-  // Optimized fallback question function - much faster selection
+  // Professional fallback questions - medically relevant
   const getRandomFallbackQuestions = () => {
-    const quickQuestions = [
+    const professionalQuestions = [
       {
-        id: `morning_energy_${Date.now()}`,
-        text: "아침에 일어났을 때 기분은 어떤가요?",
+        id: `cardiovascular_${Date.now()}`,
+        text: "평소보다 호흡이 더 힘들거나 가슴이 답답하신가요?",
+        type: "boolean",
+        required: false
+      },
+      {
+        id: `cognitive_${Date.now() + 1}`,
+        text: "오늘 집중력이나 기억력에 어려움을 느끼시나요? (1-10점: 1=전혀 없음, 10=매우 심함)",
         type: "scale",
         required: false
       },
       {
-        id: `morning_hydration_${Date.now() + 1}`,
-        text: "목마름을 느끼시나요?",
+        id: `digestive_${Date.now() + 2}`,
+        text: "식욕 상태는 어떠신가요?",
+        type: "multiple",
+        options: ["평소와 같음", "평소보다 좋음", "평소보다 떨어짐", "전혀 없음"],
+        required: false
+      },
+      {
+        id: `musculoskeletal_${Date.now() + 3}`,
+        text: "기상 후 관절이나 근육의 경직감 정도는? (1-10점: 1=전혀 없음, 10=매우 심함)",
+        type: "scale",
+        required: false
+      },
+      {
+        id: `neurological_${Date.now() + 4}`,
+        text: "어지러움이나 균형감각 이상을 느끼시나요?",
         type: "boolean",
         required: false
       },
       {
-        id: `morning_comfort_${Date.now() + 2}`,
-        text: "전체적으로 몸이 편안한가요?",
-        type: "boolean",
-        required: false
-      },
-      {
-        id: `morning_readiness_${Date.now() + 3}`,
-        text: "하루를 시작할 준비가 되셨나요?",
-        type: "boolean",
+        id: `mental_health_${Date.now() + 5}`,
+        text: "전반적인 스트레스나 불안감 정도는? (1-10점: 1=전혀 없음, 10=매우 심함)",
+        type: "scale",
         required: false
       }
     ]
     
-    return quickQuestions
+    // Randomly select 4 questions for variety
+    const shuffled = professionalQuestions.sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 4)
   }
 
   const getTodaysQuestions = (): DailyQuestion[] => {
@@ -201,7 +232,7 @@ JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
     else if (stiffnessCount >= 1) score -= 2 // Some stiffness
     // No stiffness gets no penalty
     
-    // AI Questions impact (0-15 points) - significant contribution to health assessment
+    // AI Questions impact (0-15 points) - professional health assessment integration
     const additionalAnswers = data.additionalQuestions
     let aiQuestionsScore = 0
     let aiQuestionsCount = 0
@@ -210,55 +241,74 @@ JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
       aiQuestionsCount++
       
       if (typeof answer === 'number') {
-        // Scale questions (1-10): normalize to health impact
-        if (answer >= 8) aiQuestionsScore += 4 // Very positive
-        else if (answer >= 6) aiQuestionsScore += 2 // Positive
-        else if (answer >= 4) aiQuestionsScore += 0 // Neutral
-        else if (answer >= 2) aiQuestionsScore -= 2 // Concerning
-        else aiQuestionsScore -= 4 // Very concerning
-      } else if (typeof answer === 'boolean') {
-        // Boolean questions: context-dependent interpretation
+        // Scale questions (1-10): more sophisticated health interpretation
         const questionText = questionId.toLowerCase()
         
-        // Positive health indicators (good if true)
-        if (questionText.includes('comfortable') || 
-            questionText.includes('ready') || 
-            questionText.includes('clear') || 
-            questionText.includes('smooth') ||
-            questionText.includes('motivated') ||
-            questionText.includes('steady')) {
+        // For negative health indicators (pain, stress, difficulty levels)
+        if (questionText.includes('pain') || 
+            questionText.includes('stress') || 
+            questionText.includes('difficulty') || 
+            questionText.includes('심함') ||
+            questionText.includes('어려움') ||
+            questionText.includes('불안') ||
+            questionText.includes('경직')) {
+          if (answer <= 2) aiQuestionsScore += 4 // Very good (minimal symptoms)
+          else if (answer <= 4) aiQuestionsScore += 2 // Good (mild symptoms)
+          else if (answer <= 6) aiQuestionsScore += 0 // Moderate symptoms
+          else if (answer <= 8) aiQuestionsScore -= 3 // Concerning symptoms
+          else aiQuestionsScore -= 6 // Severe symptoms
+        }
+        // For positive health indicators (energy, appetite, wellbeing)
+        else {
+          if (answer >= 8) aiQuestionsScore += 4 // Excellent
+          else if (answer >= 6) aiQuestionsScore += 2 // Good
+          else if (answer >= 4) aiQuestionsScore += 0 // Fair
+          else if (answer >= 2) aiQuestionsScore -= 2 // Poor
+          else aiQuestionsScore -= 4 // Very poor
+        }
+      } else if (typeof answer === 'boolean') {
+        // Boolean questions: more precise medical interpretation
+        const questionText = questionId.toLowerCase()
+        
+        // Serious health symptoms (very bad if true)
+        if (questionText.includes('호흡') || 
+            questionText.includes('답답') || 
+            questionText.includes('어지러') || 
+            questionText.includes('pain') || 
+            questionText.includes('chest') || 
+            questionText.includes('dizz') || 
+            questionText.includes('breathing') ||
+            questionText.includes('shortness')) {
+          aiQuestionsScore += answer ? -5 : 3 // Heavy penalty for symptoms
+        }
+        // General comfort/wellness indicators
+        else if (questionText.includes('comfortable') || 
+                 questionText.includes('편안') || 
+                 questionText.includes('ready') || 
+                 questionText.includes('준비') ||
+                 questionText.includes('motivated') ||
+                 questionText.includes('의욕')) {
           aiQuestionsScore += answer ? 3 : -2
         }
-        // Negative health indicators (bad if true)
-        else if (questionText.includes('pain') || 
-                 questionText.includes('dizz') || 
-                 questionText.includes('headache') || 
-                 questionText.includes('nausea') ||
-                 questionText.includes('pressure') ||
-                 questionText.includes('swelling')) {
-          aiQuestionsScore += answer ? -3 : 2
-        }
-        // Neutral interpretation for other boolean questions
+        // Moderate health concerns
         else {
-          aiQuestionsScore += answer ? 1 : -1
+          aiQuestionsScore += answer ? -2 : 1
         }
       } else if (typeof answer === 'string' && answer.trim()) {
-        // Multiple choice and text questions
+        // Multiple choice questions: professional health context
         const answerLower = answer.toLowerCase()
         
-        // Evaluate based on common positive/negative keywords
-        if (answerLower.includes('very') && (answerLower.includes('good') || answerLower.includes('comfortable') || answerLower.includes('motivated'))) {
+        // Professional health response evaluation
+        if (answerLower.includes('평소와 같음') || answerLower.includes('normal') || answerLower.includes('good')) {
+          aiQuestionsScore += 3
+        } else if (answerLower.includes('평소보다 좋음') || answerLower.includes('better') || answerLower.includes('excellent')) {
           aiQuestionsScore += 4
-        } else if (answerLower.includes('good') || answerLower.includes('comfortable') || answerLower.includes('normal') || answerLower.includes('motivated')) {
-          aiQuestionsScore += 2
-        } else if (answerLower.includes('slight') || answerLower.includes('somewhat') || answerLower.includes('moderate')) {
-          aiQuestionsScore += 0
-        } else if (answerLower.includes('low') || answerLower.includes('poor') || answerLower.includes('tired') || answerLower.includes('cold') || answerLower.includes('dry')) {
+        } else if (answerLower.includes('평소보다 떨어짐') || answerLower.includes('떨어') || answerLower.includes('worse') || answerLower.includes('poor')) {
           aiQuestionsScore -= 2
-        } else if (answerLower.includes('very') && (answerLower.includes('poor') || answerLower.includes('bad') || answerLower.includes('tired'))) {
+        } else if (answerLower.includes('전혀 없음') || answerLower.includes('매우') || answerLower.includes('severe') || answerLower.includes('very poor')) {
           aiQuestionsScore -= 4
         } else {
-          // Default neutral for unrecognized text
+          // Neutral response
           aiQuestionsScore += 1
         }
       }
@@ -280,32 +330,71 @@ JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
     const advice = []
     
+    // Professional health recommendations based on data
     if (data.sleep !== null && (data.sleep < 6.5 || data.sleep > 8.5)) {
-      advice.push("Consider aiming for 7-8 hours of sleep for optimal energy")
+      if (data.sleep < 6.5) {
+        advice.push("수면 부족이 감지되었습니다. 7-8시간의 규칙적인 수면을 권장합니다")
+      } else {
+        advice.push("과도한 수면이 감지되었습니다. 수면의 질을 점검해보세요")
+      }
     }
     
     if (data.fatigue !== null && data.fatigue >= 7) {
-      advice.push("High fatigue may indicate need for better rest or gentle activity")
+      advice.push("높은 피로도가 감지되었습니다. 충분한 휴식과 가벼운 활동을 권장합니다")
     }
     
     if (data.swelling) {
-      advice.push("Monitor swelling - stay hydrated and consider elevating legs when resting")
+      advice.push("부종이 지속되면 의료진과 상담하고, 수분 섭취와 다리 거상을 권장합니다")
     }
     
     if (data.stiffness.length > 0 && !data.stiffness.includes('None')) {
-      advice.push("Gentle stretches can help ease stiffness and improve mobility")
+      const stiffnessCount = data.stiffness.filter(s => s !== 'None').length
+      if (stiffnessCount >= 3) {
+        advice.push("다발성 관절 경직이 감지되었습니다. 전문의 상담을 고려해보세요")
+      } else {
+        advice.push("관절 경직 완화를 위한 스트레칭과 온찜질을 권장합니다")
+      }
     }
+
+    // Professional advice based on AI question responses
+    const additionalAnswers = data.additionalQuestions
+    Object.entries(additionalAnswers).forEach(([questionId, answer]) => {
+      const questionLower = questionId.toLowerCase()
+      
+      // Cardiovascular concerns
+      if ((questionLower.includes('호흡') || questionLower.includes('답답')) && answer === true) {
+        advice.push("호흡곤란이나 흉부 답답함은 심혈관 검진이 필요할 수 있습니다")
+      }
+      
+      // Neurological concerns
+      if ((questionLower.includes('어지러') || questionLower.includes('균형')) && answer === true) {
+        advice.push("어지러움이나 균형감각 이상은 의료진 상담을 권장합니다")
+      }
+      
+      // Cognitive function
+      if (questionLower.includes('집중') || questionLower.includes('기억')) {
+        if (typeof answer === 'number' && answer >= 6) {
+          advice.push("인지기능 저하가 지속되면 전문의 상담을 고려해보세요")
+        }
+      }
+      
+      // High stress/anxiety levels
+      if ((questionLower.includes('스트레스') || questionLower.includes('불안')) && typeof answer === 'number' && answer >= 7) {
+        advice.push("높은 스트레스나 불안감이 감지되었습니다. 정신건강 관리가 필요합니다")
+      }
+    })
     
+    // Overall health status with professional context
     if (score >= 90) {
-      advice.push("Excellent health status! You're feeling great and starting strong")
+      advice.push("우수한 건강상태입니다. 현재 건강 관리 방식을 유지하세요")
     } else if (score >= 80) {
-      advice.push("Good health status - you're doing well overall")
+      advice.push("전반적으로 양호한 건강상태입니다")
     } else if (score >= 70) {
-      advice.push("Fair health status - some areas may need attention")
+      advice.push("일부 건강 지표에 주의가 필요합니다. 생활습관 개선을 권장합니다")
     } else if (score >= 60) {
-      advice.push("Health indicators suggest focusing on rest and gentle self-care today")
+      advice.push("여러 건강 지표가 우려됩니다. 자가관리와 휴식을 늘려보세요")
     } else {
-      advice.push("Multiple health concerns present - consider consulting a healthcare provider")
+      advice.push("복합적인 건강 문제가 감지되었습니다. 의료진 상담을 적극 권장합니다")
     }
     
     return advice
