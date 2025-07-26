@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teresa Companion Chatbot - Test Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="teresa-chatbot.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #FCF4DF;
+            color: #1B4D3E;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #1B4D3E;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #1B4D3E;
+        }
+        
+        .demo-section h3 {
+            margin-top: 0;
+            color: #1B4D3E;
+        }
+        
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .test-btn {
+            background: #1B4D3E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        
+        .test-btn:hover {
+            background: #0f3027;
+        }
+        
+        .test-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-card h4 {
+            margin-top: 0;
+            color: #1B4D3E;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .status.working {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.demo {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Teresa Companion Chatbot</h1>
+        <p><strong>An embeddable AI health support widget for emotional wellness</strong></p>
+        
+        <div class="demo-section">
+            <h3>👋 Welcome to Teresa</h3>
+            <p>Teresa Companion is an emotional support chatbot designed specifically for users experiencing health concerns. Unlike typical medical chatbots, Teresa focuses on:</p>
+            <ul>
+                <li><strong>Emotional validation</strong> - "That must feel scary. You're not alone."</li>
+                <li><strong>Empathetic responses</strong> - Understanding before educating</li>
+                <li><strong>Gradual support</strong> - Building trust before offering insights</li>
+                <li><strong>Safety-first approach</strong> - Encouraging professional care when needed</li>
+            </ul>
+        </div>
+
+        <div class="demo-section">
+            <h3>🚀 Quick Start</h3>
+            <p>To embed Teresa in your website, simply include the JavaScript file and initialize:</p>
+            <div class="code-block">
+&lt;script src="teresa-chatbot.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  TeresaChatbot.init({
+    apiKey: 'your-openai-api-key',
+    primaryColor: '#1B4D3E',
+    backgroundColor: '#FCF4DF'
+  });
+&lt;/script&gt;
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>⚙️ Configuration Options</h3>
+            <div class="code-block">
+TeresaChatbot.init({
+  // Required: Your OpenAI API key
+  apiKey: 'sk-your-api-key-here',
+  
+  // Optional: Customization
+  buttonText: 'Talk to Teresa',
+  primaryColor: '#1B4D3E',
+  backgroundColor: '#FCF4DF',
+  position: 'bottom-right', // bottom-left, top-right, top-left
+  zIndex: 10000,
+  
+  // Advanced: Custom API endpoint
+  apiEndpoint: 'https://api.openai.com/v1/chat/completions'
+});
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🎯 Emotional Focus <span class="status working">Active</span></h4>
+                <p>Prioritizes empathy and emotional validation before offering medical information.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>💚 Health-Aware <span class="status working">Active</span></h4>
+                <p>Understanding of common health concerns with appropriate, gentle responses.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🧠 AI-Powered <span class="status demo">Demo Mode</span></h4>
+                <p>Uses OpenAI GPT-4 for natural, contextual conversations (requires API key).</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>📱 Responsive <span class="status working">Active</span></h4>
+                <p>Optimized for mobile devices with touch-friendly interface.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🎨 Customizable <span class="status working">Active</span></h4>
+                <p>Easy theming to match your website's brand and colors.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>♿ Accessible <span class="status working">Active</span></h4>
+                <p>Keyboard navigation, screen reader support, and high contrast mode.</p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🧪 Test Functions</h3>
+            <p>Try these functions to test the chatbot behavior:</p>
+            <div class="test-buttons">
+                <button class="test-btn" onclick="testClearHistory()">Clear Chat History</button>
+                <button class="test-btn" onclick="testOpenChat()">Open Chat</button>
+                <button class="test-btn" onclick="testCloseChat()">Close Chat</button>
+                <button class="test-btn" onclick="testSampleMessage()">Send Test Message</button>
+                <button class="test-btn" onclick="testResetName()">Reset User Name</button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>💡 Sample Conversations</h3>
+            <p><strong>Typical user inputs Teresa handles well:</strong></p>
+            <ul>
+                <li>"I've been feeling really tired lately"</li>
+                <li>"My chest feels tight and I'm worried"</li>
+                <li>"I have a headache that won't go away"</li>
+                <li>"I'm feeling anxious about my health"</li>
+                <li>"I don't know what's wrong with me"</li>
+            </ul>
+            
+            <p><strong>Teresa's approach:</strong></p>
+            <ol>
+                <li><strong>Immediate empathy:</strong> "That must feel really concerning..."</li>
+                <li><strong>Emotional validation:</strong> "Your feelings about this are completely valid..."</li>
+                <li><strong>After trust building:</strong> "Would it help if I shared some general information?"</li>
+                <li><strong>Gentle guidance:</strong> "It might be good to check with a doctor, just to be sure."</li>
+            </ol>
+        </div>
+
+        <div class="demo-section">
+            <h3>🔧 Integration Notes</h3>
+            <ul>
+                <li><strong>API Key:</strong> Currently using demo responses. Add your OpenAI API key for full functionality.</li>
+                <li><strong>Privacy:</strong> Conversations stored locally in browser (localStorage)</li>
+                <li><strong>Mobile:</strong> Automatically adapts to mobile screen sizes</li>
+                <li><strong>Accessibility:</strong> Supports keyboard navigation and screen readers</li>
+                <li><strong>Performance:</strong> Lightweight (~25KB) with minimal dependencies</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Load the chatbot -->
+    <script src="teresa-chatbot.js"></script>
+    <script>
+        // Initialize Teresa with demo configuration
+        const chatbot = TeresaChatbot.init({
+            buttonText: 'Talk to Teresa 💚',
+            primaryColor: '#1B4D3E',
+            backgroundColor: '#FCF4DF',
+            position: 'bottom-right'
+        });
+
+        // Test functions for demo page
+        function testClearHistory() {
+            if (window.teresaChatbot) {
+                window.teresaChatbot.clearHistory();
+                alert('Chat history cleared!');
+            }
+        }
+
+        function testOpenChat() {
+            if (window.teresaChatbot) {
+                window.teresaChatbot.openModal();
+            }
+        }
+
+        function testCloseChat() {
+            if (window.teresaChatbot) {
+                window.teresaChatbot.closeModal();
+            }
+        }
+
+        function testSampleMessage() {
+            if (window.teresaChatbot && window.teresaChatbot.isOpen) {
+                window.teresaChatbot.messageInput.value = "I've been feeling really tired lately";
+                window.teresaChatbot.sendMessage();
+            } else {
+                alert('Please open the chat first');
+            }
+        }
+
+        function testResetName() {
+            localStorage.removeItem('teresa-user-name');
+            if (window.teresaChatbot) {
+                window.teresaChatbot.userName = '';
+                window.teresaChatbot.clearHistory();
+                alert('User name reset! The chatbot will ask for your name again.');
+            }
+        }
+
+        // Demo notification
+        setTimeout(() => {
+            if (!localStorage.getItem('teresa-demo-shown')) {
+                alert('👋 Welcome! Click the green heart button in the bottom-right to start chatting with Teresa. This is a demo version with mock responses.');
+                localStorage.setItem('teresa-demo-shown', 'true');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

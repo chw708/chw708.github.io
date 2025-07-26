@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from '@/components/ui/sonner'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { TeresaChatbotProvider } from './components/TeresaChatbot'
 import HomePage from './components/HomePage'
 import MorningCheckIn from './components/MorningCheckIn'
 import MiddayCheckIn from './components/MiddayCheckIn'
@@ -43,13 +44,15 @@ function App() {
 
   return (
     <LanguageProvider>
-      <div className="min-h-screen bg-background">
-        <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
-        <main className="pb-20">
-          {renderPage()}
-        </main>
-        <Toaster />
-      </div>
+      <TeresaChatbotProvider>
+        <div className="min-h-screen bg-background">
+          <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
+          <main className="pb-20">
+            {renderPage()}
+          </main>
+          <Toaster />
+        </div>
+      </TeresaChatbotProvider>
     </LanguageProvider>
   )
 }

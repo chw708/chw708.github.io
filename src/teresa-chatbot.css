@@ -1,0 +1,151 @@
+/* Teresa Companion Chatbot Styles */
+/* Minimal external stylesheet for easier customization */
+
+.teresa-chatbot-container {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom theme variables for easy rebranding */
+:root {
+  --teresa-primary: #1B4D3E;
+  --teresa-primary-light: #2d6b5a;
+  --teresa-background: #FCF4DF;
+  --teresa-white: #ffffff;
+  --teresa-border: #e5e7eb;
+  --teresa-text-muted: #6b7280;
+  --teresa-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  --teresa-shadow-hover: 0 6px 25px rgba(0, 0, 0, 0.2);
+  --teresa-radius: 16px;
+  --teresa-radius-small: 8px;
+  --teresa-radius-button: 24px;
+}
+
+/* Enhanced hover effects */
+.teresa-chatbot-button:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: var(--teresa-shadow-hover);
+}
+
+/* Smooth animations */
+.teresa-message {
+  animation: teresa-message-appear 0.3s ease-out;
+}
+
+@keyframes teresa-message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced quick options */
+.teresa-quick-option {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.teresa-quick-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.teresa-quick-option:hover::before {
+  left: 100%;
+}
+
+/* Loading state */
+.teresa-send-button.loading {
+  animation: teresa-loading-spin 1s linear infinite;
+}
+
+@keyframes teresa-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Enhanced focus states for accessibility */
+.teresa-chatbot-button:focus,
+.teresa-send-button:focus,
+.teresa-quick-option:focus,
+input:focus {
+  outline: 2px solid var(--teresa-primary);
+  outline-offset: 2px;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .teresa-chatbot-modal {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .teresa-message.bot {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+  
+  .teresa-quick-option {
+    background: #374151;
+    border-color: var(--teresa-primary);
+    color: #f9fafb;
+  }
+  
+  .teresa-chatbot-input input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+}
+
+/* Print styles */
+@media print {
+  .teresa-chatbot-button,
+  .teresa-chatbot-modal {
+    display: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .teresa-chatbot-button {
+    border: 2px solid currentColor;
+  }
+  
+  .teresa-message.bot {
+    border: 2px solid var(--teresa-primary);
+  }
+  
+  .teresa-quick-option {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .teresa-chatbot-button,
+  .teresa-message,
+  .teresa-quick-option {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .teresa-typing-dot {
+    animation: none !important;
+  }
+}
