@@ -169,28 +169,27 @@ JSON 형식으로 응답해주세요:
         required: false
       },
       {
+        id: `stiffness_${Date.now() + 3}`,
         text: "기상 후 관절이나 근육의 경직감 정도는? (1-10점: 1=전혀 없음, 10=매우 심함)",
         type: "scale",
         required: false
-        required: false
       },
-      { `neurological_${Date.now() + 4}`,
+      {
+        id: `neurological_${Date.now() + 4}`,
         text: "어지러움이나 균형감각 이상을 느끼시나요?",
         type: "boolean",
-        type: "boolean",
         required: false
+      },
       {
         id: `mental_health_${Date.now() + 5}`,
         text: "전반적인 스트레스나 불안감 정도는? (1-10점: 1=전혀 없음, 10=매우 심함)",
         type: "scale",
         required: false
       }
-      }
     ]
     
     const shuffled = professionalQuestions.sort(() => 0.5 - Math.random())
     return shuffled.slice(0, 4)
-  }
   }
 
   const getTodaysQuestions = (): DailyQuestion[] => {
@@ -206,7 +205,7 @@ JSON 형식으로 응답해주세요:
     
     // Sleep score (0-12 points) - realistic sleep assessment
     if (data.sleep !== null) {
-      else if (data.sleep < 5.5 || data.sleep > 9) score -= 8 // Poor sleep duration
+      if (data.sleep < 5.5 || data.sleep > 9) score -= 8 // Poor sleep duration
       else if (data.sleep < 6.5 || data.sleep > 8.5) score -= 4 // Below optimal range
       else if (data.sleep >= 7 && data.sleep <= 8) score += 2 // Optimal sleep bonus
       // 6.5-8.5 hours gets minimal penalty, 7-8 hours gets bonus
