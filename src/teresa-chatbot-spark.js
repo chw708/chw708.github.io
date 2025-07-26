@@ -791,9 +791,6 @@ Provide empathy followed by practical advice:`;
     this.scrollToBottom();
   }
 
-  /**
-   * Hide typing indicator
-   */
   hideTypingIndicator() {
     const typingIndicator = document.getElementById('teresa-typing-indicator');
     if (typingIndicator) {
@@ -867,7 +864,46 @@ Provide empathy followed by practical advice:`;
       'Stomach issues or nausea',
       'Muscle aches or stiffness',
       'Difficulty sleeping',
-      'Feeling anxious or stressed',
+   * Clear conversation history
+   */
+  clearHistory() {
+    this.conversationHistory = [];
+    this.empathyCount = 0;
+    localStorage.removeItem('teresa-conversation');
+    this.messagesContainer.innerHTML = '';
+    this.initializeConversation();
+  }
+
+  /**
+   * Static initialization method
+   */
+  static init(config = {}) {
+    if (!window.teresaChatbotSpark) {
+      window.teresaChatbotSpark = new TeresaChatbotSpark(config);
+    }
+    return window.teresaChatbotSpark;
+  }
+}
+
+// Make chatbot available globally (only if not already defined)
+if (typeof window !== 'undefined') {
+  if (!window.TeresaChatbotSpark) {
+    window.TeresaChatbotSpark = TeresaChatbotSpark;
+    window.TeresaChatbot = TeresaChatbotSpark; // Alias for compatibility
+  }
+  
+  // Auto-init with Spark integration (only if not already initialized)
+  if (!window.teresaChatbotSparkInitialized) {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.teresaChatbotSpark) {
+        TeresaChatbotSpark.init();
+        window.teresaChatbotSparkInitialized = true;
+      }
+    });
+  }
+}
+
+})(); // End of IIFE      'Feeling anxious or stressed',
       'Other concern...'
     ];
   }
