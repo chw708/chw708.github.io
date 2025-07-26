@@ -114,12 +114,27 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
 - 의학적으로 의미있는 건강지표를 반영해야 함
 - 예/아니오, 1-10점 척도, 또는 선택지 형태로 답변 가능해야 함
 
-JSON 형식으로 응답해주세요:
-[{"id":"q${Date.now()}","text":"구체적인 건강 질문","type":"scale|boolean|multiple","options":["선택지1","선택지2"] (multiple인 경우만),"required":false}]`
+JSON 형식으로 정확히 다음과 같이 응답해주세요 (정확한 형식 준수 필수):
+[
+  {"id":"custom_q1","text":"건강 관련 질문","type":"scale","required":false},
+  {"id":"custom_q2","text":"다른 건강 질문","type":"boolean","required":false},
+  {"id":"custom_q3","text":"추가 건강 질문","type":"scale","required":false},
+  {"id":"custom_q4","text":"마지막 건강 질문","type":"boolean","required":false}
+]`
           const response = await spark.llm(prompt, "gpt-4o-mini", true)
           
-          const questions = JSON.parse(response)
-          const validQuestions = questions.filter((q: any) => q.text && q.id)
+          let questions = []
+          try {
+            questions = JSON.parse(response)
+            if (!Array.isArray(questions)) {
+              throw new Error('Response is not an array')
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse AI questions, using fallback:', parseError)
+            questions = []
+          }
+          
+          const validQuestions = questions.filter((q: any) => q.text && q.id && q.type)
           if (validQuestions.length > 0) {
             setDailyQuestions((prev: any[]) => {
               const currentEntry = prev.find((q: any) => q.date === today)
@@ -398,7 +413,7 @@ JSON 형식으로 응답해주세요:
   }
 
   const getHealthAdvice = (score: number, data: MorningData): string[] => {
-    const advice = []
+    const advice: string[] = []
     
     // Professional health recommendations based on data
     if (data.sleep !== null && (data.sleep < 6.5 || data.sleep > 8.5)) {
