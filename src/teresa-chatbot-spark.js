@@ -5,6 +5,16 @@
  * This version integrates with the Spark runtime for seamless operation
  */
 
+// Create an IIFE to avoid global pollution and prevent redeclaration
+(function() {
+  'use strict';
+  
+  // Prevent duplicate loading
+  if (typeof window !== 'undefined' && window.TeresaChatbotSpark) {
+    console.log('TeresaChatbotSpark already loaded, skipping redefinition');
+    return;
+  }
+
 class TeresaChatbotSpark {
   constructor(config = {}) {
     // Configuration with defaults
@@ -801,15 +811,22 @@ Respond with empathy and care:`;
   }
 }
 
-// Make chatbot available globally
+// Make chatbot available globally (only if not already defined)
 if (typeof window !== 'undefined') {
-  window.TeresaChatbotSpark = TeresaChatbotSpark;
-  window.TeresaChatbot = TeresaChatbotSpark; // Alias for compatibility
+  if (!window.TeresaChatbotSpark) {
+    window.TeresaChatbotSpark = TeresaChatbotSpark;
+    window.TeresaChatbot = TeresaChatbotSpark; // Alias for compatibility
+  }
   
-  // Auto-init with Spark integration
-  document.addEventListener('DOMContentLoaded', () => {
-    if (!window.teresaChatbotSpark) {
-      TeresaChatbotSpark.init();
-    }
-  });
+  // Auto-init with Spark integration (only if not already initialized)
+  if (!window.teresaChatbotSparkInitialized) {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.teresaChatbotSpark) {
+        TeresaChatbotSpark.init();
+        window.teresaChatbotSparkInitialized = true;
+      }
+    });
+  }
 }
+
+})(); // End of IIFE
