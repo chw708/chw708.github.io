@@ -230,91 +230,163 @@ JSON 형식으로 응답해주세요:
     else if (stiffnessCount >= 1) score -= 2 // Some stiffness
     // No stiffness gets no penalty
     
-    // AI Questions impact (0-15 points) - professional health assessment integration
+    // AI Questions impact (0-20 points) - enhanced professional health assessment integration
     const additionalAnswers = data.additionalQuestions
     let aiQuestionsScore = 0
     let aiQuestionsCount = 0
     
+    console.log('=== HEALTH SCORE CALCULATION ===')
+    console.log('Additional questions data:', additionalAnswers)
+    
     Object.entries(additionalAnswers).forEach(([questionId, answer]) => {
       aiQuestionsCount++
+      const questionText = questionId.toLowerCase()
+      let questionScore = 0
+      
+      console.log(`Processing question: ${questionId}, answer: ${answer}, type: ${typeof answer}`)
       
       if (typeof answer === 'number') {
-        // Scale questions (1-10): more sophisticated health interpretation
-        const questionText = questionId.toLowerCase()
+        // Scale questions (1-10): enhanced health interpretation with question context analysis
         
-        // For negative health indicators (pain, stress, difficulty levels)
+        // Negative health indicators (symptoms, pain, stress)
         if (questionText.includes('pain') || 
             questionText.includes('stress') || 
             questionText.includes('difficulty') || 
             questionText.includes('심함') ||
             questionText.includes('어려움') ||
             questionText.includes('불안') ||
-            questionText.includes('경직')) {
-          if (answer <= 2) aiQuestionsScore += 4 // Very good (minimal symptoms)
-          else if (answer <= 4) aiQuestionsScore += 2 // Good (mild symptoms)
-          else if (answer <= 6) aiQuestionsScore += 0 // Moderate symptoms
-          else if (answer <= 8) aiQuestionsScore -= 3 // Concerning symptoms
-          else aiQuestionsScore -= 6 // Severe symptoms
+            questionText.includes('경직') ||
+            questionText.includes('피로') ||
+            questionText.includes('답답') ||
+            questionText.includes('호흡') ||
+            questionText.includes('두통') ||
+            questionText.includes('통증')) {
+          // Higher scores = worse condition (reverse scoring)
+          if (answer <= 2) questionScore = 5 // Minimal symptoms - excellent
+          else if (answer <= 4) questionScore = 3 // Mild symptoms - good
+          else if (answer <= 6) questionScore = 0 // Moderate symptoms - neutral
+          else if (answer <= 8) questionScore = -4 // Concerning symptoms - poor
+          else questionScore = -7 // Severe symptoms - very poor
         }
-        // For positive health indicators (energy, appetite, wellbeing)
+        // Positive health indicators (energy, comfort, readiness, appetite)
+        else if (questionText.includes('energy') ||
+                 questionText.includes('컨디션') ||
+                 questionText.includes('기분') ||
+                 questionText.includes('편안') ||
+                 questionText.includes('ready') ||
+                 questionText.includes('준비') ||
+                 questionText.includes('appetite') ||
+                 questionText.includes('식욕') ||
+                 questionText.includes('활력') ||
+                 questionText.includes('motivated') ||
+                 questionText.includes('의욕')) {
+          // Higher scores = better condition (normal scoring)
+          if (answer >= 8) questionScore = 5 // Excellent condition
+          else if (answer >= 6) questionScore = 3 // Good condition
+          else if (answer >= 4) questionScore = 0 // Fair condition
+          else if (answer >= 2) questionScore = -3 // Poor condition
+          else questionScore = -5 // Very poor condition
+        }
+        // Generic scale questions - moderate impact
         else {
-          if (answer >= 8) aiQuestionsScore += 4 // Excellent
-          else if (answer >= 6) aiQuestionsScore += 2 // Good
-          else if (answer >= 4) aiQuestionsScore += 0 // Fair
-          else if (answer >= 2) aiQuestionsScore -= 2 // Poor
-          else aiQuestionsScore -= 4 // Very poor
+          if (answer >= 7) questionScore = 3
+          else if (answer >= 5) questionScore = 1
+          else if (answer >= 3) questionScore = 0
+          else questionScore = -2
         }
       } else if (typeof answer === 'boolean') {
-        // Boolean questions: more precise medical interpretation
-        const questionText = questionId.toLowerCase()
+        // Boolean questions: context-sensitive medical interpretation
         
-        // Serious health symptoms (very bad if true)
+        // Serious health symptoms (very concerning if true)
         if (questionText.includes('호흡') || 
             questionText.includes('답답') || 
             questionText.includes('어지러') || 
+            questionText.includes('균형') ||
             questionText.includes('pain') || 
             questionText.includes('chest') || 
             questionText.includes('dizz') || 
             questionText.includes('breathing') ||
-            questionText.includes('shortness')) {
-          aiQuestionsScore += answer ? -5 : 3 // Heavy penalty for symptoms
+            questionText.includes('shortness') ||
+            questionText.includes('통증') ||
+            questionText.includes('두통')) {
+          questionScore = answer ? -6 : 4 // Heavy penalty for symptoms, bonus for absence
         }
-        // General comfort/wellness indicators
+        // General wellness indicators (good if true)
         else if (questionText.includes('comfortable') || 
                  questionText.includes('편안') || 
                  questionText.includes('ready') || 
                  questionText.includes('준비') ||
                  questionText.includes('motivated') ||
-                 questionText.includes('의욕')) {
-          aiQuestionsScore += answer ? 3 : -2
+                 questionText.includes('의욕') ||
+                 questionText.includes('좋') ||
+                 questionText.includes('잘') ||
+                 questionText.includes('good') ||
+                 questionText.includes('well')) {
+          questionScore = answer ? 4 : -2 // Bonus for wellness, penalty for lack
         }
         // Moderate health concerns
         else {
-          aiQuestionsScore += answer ? -2 : 1
+          questionScore = answer ? -3 : 2
         }
       } else if (typeof answer === 'string' && answer.trim()) {
-        // Multiple choice questions: professional health context
+        // Multiple choice questions: enhanced professional health context evaluation
         const answerLower = answer.toLowerCase()
         
-        // Professional health response evaluation
-        if (answerLower.includes('평소와 같음') || answerLower.includes('normal') || answerLower.includes('good')) {
-          aiQuestionsScore += 3
-        } else if (answerLower.includes('평소보다 좋음') || answerLower.includes('better') || answerLower.includes('excellent')) {
-          aiQuestionsScore += 4
-        } else if (answerLower.includes('평소보다 떨어짐') || answerLower.includes('떨어') || answerLower.includes('worse') || answerLower.includes('poor')) {
-          aiQuestionsScore -= 2
-        } else if (answerLower.includes('전혀 없음') || answerLower.includes('매우') || answerLower.includes('severe') || answerLower.includes('very poor')) {
-          aiQuestionsScore -= 4
+        // Excellent health indicators
+        if (answerLower.includes('평소보다 좋음') || 
+            answerLower.includes('매우 좋음') ||
+            answerLower.includes('excellent') || 
+            answerLower.includes('very good') ||
+            answerLower.includes('훌륭')) {
+          questionScore = 5
+        }
+        // Good/normal health indicators
+        else if (answerLower.includes('평소와 같음') || 
+                 answerLower.includes('좋음') ||
+                 answerLower.includes('normal') || 
+                 answerLower.includes('good') ||
+                 answerLower.includes('괜찮')) {
+          questionScore = 3
+        }
+        // Slightly concerning indicators
+        else if (answerLower.includes('평소보다 떨어짐') || 
+                 answerLower.includes('조금') ||
+                 answerLower.includes('약간') ||
+                 answerLower.includes('slightly') || 
+                 answerLower.includes('mild')) {
+          questionScore = -1
+        }
+        // Poor health indicators
+        else if (answerLower.includes('떨어짐') || 
+                 answerLower.includes('나쁨') ||
+                 answerLower.includes('worse') || 
+                 answerLower.includes('poor')) {
+          questionScore = -3
+        }
+        // Severe health concerns
+        else if (answerLower.includes('전혀 없음') || 
+                 answerLower.includes('매우 나쁨') ||
+                 answerLower.includes('심각') ||
+                 answerLower.includes('severe') || 
+                 answerLower.includes('very poor')) {
+          questionScore = -5
         } else {
-          // Neutral response
-          aiQuestionsScore += 1
+          // Neutral/unknown response
+          questionScore = 1
         }
       }
+      
+      aiQuestionsScore += questionScore
+      console.log(`Question ${questionId}: score = ${questionScore}, total AI score = ${aiQuestionsScore}`)
     })
     
     // Apply AI questions score with engagement bonus
     score += aiQuestionsScore
     score += aiQuestionsCount * 1 // Small engagement bonus for answering
+    
+    console.log(`Final AI questions contribution: ${aiQuestionsScore} points from ${aiQuestionsCount} questions`)
+    console.log(`Total score before bounds: ${score}`)
+    console.log('=== END HEALTH SCORE CALCULATION ===')
     
     // Small bonus for vitals tracking
     if (data.bloodPressure || data.bloodSugar) score += 2
@@ -378,7 +450,32 @@ JSON 형식으로 응답해주세요:
       
       // High stress/anxiety levels
       if ((questionLower.includes('스트레스') || questionLower.includes('불안')) && typeof answer === 'number' && answer >= 7) {
-        advice.push("높은 스트레스나 불안감이 감지되었습니���. 정신건강 관리가 필요합니다")
+        advice.push("높은 스트레스나 불안감이 감지되었습니다. 정신건강 관리가 필요합니다")
+      }
+    })
+    
+    // Additional advice patterns for extended questions
+    Object.entries(additionalAnswers).forEach(([questionId, answer]) => {
+      const questionLower = questionId.toLowerCase()
+      
+      // Low energy/mood levels
+      if ((questionLower.includes('컨디션') || questionLower.includes('기분') || questionLower.includes('energy') || questionLower.includes('mood')) && typeof answer === 'number' && answer <= 4) {
+        advice.push("컨디션이나 기분이 좋지 않습니다. 충분한 휴식과 자기관리를 권장합니다")
+      }
+      
+      // Pain/discomfort indicators
+      if ((questionLower.includes('통증') || questionLower.includes('아픔') || questionLower.includes('pain') || questionLower.includes('discomfort')) && ((typeof answer === 'number' && answer >= 6) || answer === true)) {
+        advice.push("지속적인 통증이나 불편감이 있다면 의료진 상담을 권장합니다")
+      }
+      
+      // Poor appetite indicators
+      if ((questionLower.includes('식욕') || questionLower.includes('appetite')) && (answer === '전혀 없음' || answer === '평소보다 떨어짐')) {
+        advice.push("식욕 저하가 지속되면 영양상태와 전반적 건강을 점검해보세요")
+      }
+      
+      // Positive wellness indicators
+      if ((questionLower.includes('준비') || questionLower.includes('ready') || questionLower.includes('motivated')) && (answer === true || (typeof answer === 'number' && answer >= 8))) {
+        advice.push("훌륭한 활력과 의욕을 보이고 있습니다. 현재 상태를 유지하세요")
       }
     })
     
