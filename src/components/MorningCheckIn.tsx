@@ -169,28 +169,28 @@ JSON 형식으로 응답해주세요:
         required: false
       },
       {
-        id: `musculoskeletal_${Date.now() + 3}`,
         text: "기상 후 관절이나 근육의 경직감 정도는? (1-10점: 1=전혀 없음, 10=매우 심함)",
         type: "scale",
         required: false
-      },
-      {
-        id: `neurological_${Date.now() + 4}`,
-        text: "어지러움이나 균형감각 이상을 느끼시나요?",
-        type: "boolean",
         required: false
       },
+      { `neurological_${Date.now() + 4}`,
+        text: "어지러움이나 균형감각 이상을 느끼시나요?",
+        type: "boolean",
+        type: "boolean",
+        required: false
       {
         id: `mental_health_${Date.now() + 5}`,
         text: "전반적인 스트레스나 불안감 정도는? (1-10점: 1=전혀 없음, 10=매우 심함)",
         type: "scale",
         required: false
       }
+      }
     ]
     
-    // Randomly select 4 questions for variety
     const shuffled = professionalQuestions.sort(() => 0.5 - Math.random())
     return shuffled.slice(0, 4)
+  }
   }
 
   const getTodaysQuestions = (): DailyQuestion[] => {
@@ -206,7 +206,6 @@ JSON 형식으로 응답해주세요:
     
     // Sleep score (0-12 points) - realistic sleep assessment
     if (data.sleep !== null) {
-      if (data.sleep < 4 || data.sleep > 10) score -= 12 // Severely inadequate sleep
       else if (data.sleep < 5.5 || data.sleep > 9) score -= 8 // Poor sleep duration
       else if (data.sleep < 6.5 || data.sleep > 8.5) score -= 4 // Below optimal range
       else if (data.sleep >= 7 && data.sleep <= 8) score += 2 // Optimal sleep bonus
@@ -380,7 +379,7 @@ JSON 형식으로 응답해주세요:
       
       // High stress/anxiety levels
       if ((questionLower.includes('스트레스') || questionLower.includes('불안')) && typeof answer === 'number' && answer >= 7) {
-        advice.push("높은 스트레스나 불안감이 감지되었습니다. 정신건강 관리가 필요합니다")
+        advice.push("높은 스트레스나 불안감이 감지되었습니���. 정신건강 관리가 필요합니다")
       }
     })
     
