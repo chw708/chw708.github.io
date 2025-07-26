@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { translations } from '../translations'
 
@@ -14,6 +14,11 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useKV<Language>('app-language', 'en')
+
+  // Update HTML lang attribute when language changes
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   const t = (key: string): string => {
     const keys = key.split('.')

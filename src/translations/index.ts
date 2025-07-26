@@ -12,7 +12,21 @@ export const translations = {
       success: 'Success!',
       confirm: 'Confirm',
       yes: 'Yes',
-      no: 'No'
+      no: 'No',
+      optional: 'Optional',
+      required: 'Required',
+      hours: 'hours',
+      kg: 'kg',
+      systolic: 'Systolic',
+      diastolic: 'Diastolic',
+      mgdl: 'mg/dL',
+      mmhg: 'mmHg',
+      none: 'None',
+      today: 'Today',
+      yesterday: 'Yesterday',
+      thisWeek: 'This Week',
+      generating: 'Generating...',
+      pleasewait: 'Please wait...'
     },
     navigation: {
       home: 'Home',
@@ -50,7 +64,21 @@ export const translations = {
       bloodPressure: 'Blood pressure (optional)',
       bloodSugar: 'Blood sugar level (optional)',
       complete: 'Complete Check-in',
-      healthScore: 'Health Score'
+      healthScore: 'Health Score',
+      stiffness: 'Any stiff body areas?',
+      stiffnessOptions: {
+        neck: 'Neck',
+        shoulders: 'Shoulders', 
+        back: 'Back',
+        hips: 'Hips',
+        knees: 'Knees',
+        ankles: 'Ankles',
+        wrists: 'Wrists',
+        none: 'None'
+      },
+      generatingQuestions: 'Generating personalized questions...',
+      customQuestions: 'Additional Health Questions',
+      skipCustom: 'Skip Additional Questions'
     },
     midday: {
       title: 'Midday Log',
@@ -58,7 +86,15 @@ export const translations = {
       meals: 'What did you eat today?',
       symptoms: 'Any unusual symptoms?',
       mood: 'How are you feeling?',
-      notes: 'Additional notes'
+      notes: 'Additional notes',
+      moodOptions: {
+        great: '😊 Great',
+        good: '🙂 Good',
+        okay: '😐 Okay',
+        tired: '😴 Tired',
+        stressed: '😰 Stressed',
+        unwell: '🤒 Unwell'
+      }
     },
     night: {
       title: 'Night Reflection',
@@ -67,7 +103,17 @@ export const translations = {
       happy: 'What made you happy today?',
       stressLevel: 'Rate your stress level (1-10)',
       connected: 'Did you feel connected with others?',
-      gratitude: 'What are you grateful for?'
+      gratitude: 'What are you grateful for?',
+      emotionalSupport: 'How are you feeling emotionally?',
+      chattingWithTeresa: 'Chatting with Teresa...',
+      reflection: 'Daily Reflection',
+      questions: {
+        happy: 'Did anything make you happy today?',
+        stress: 'How would you rate your stress level today?',
+        connected: 'Did you feel connected with others today?',
+        grateful: 'What are you grateful for today?',
+        challenges: 'What challenges did you face today?'
+      }
     },
     dashboard: {
       title: 'Health Dashboard',
@@ -83,7 +129,20 @@ export const translations = {
       weight: 'Weight',
       bloodPressure: 'Blood Pressure',
       bloodSugar: 'Blood Sugar',
-      recommendedStretches: 'Recommended Stretches'
+      recommendedStretches: 'Recommended Stretches',
+      weeklyTrends: 'Weekly Trends',
+      recentInsights: 'Recent Insights',
+      healthHistory: 'Health History',
+      averageScore: 'Average Score',
+      improvement: 'Improvement',
+      suggestion: 'Suggestion'
+    },
+    stretches: {
+      title: 'Recommended Stretches',
+      forArea: 'For',
+      description: 'Description',
+      duration: 'Duration',
+      instructions: 'Instructions'
     },
     settings: {
       title: 'Settings',
@@ -106,19 +165,50 @@ export const translations = {
       language: 'Language',
       selectLanguage: 'Select Language',
       english: 'English',
-      korean: '한국어'
+      korean: '한국어',
+      profileSaved: 'Profile saved successfully!',
+      dataCleared: 'All data has been cleared.',
+      confirmClearData: 'Are you sure you want to clear all data? This cannot be undone.'
     },
     about: {
       title: 'About Teresa Health',
       mission: 'Our Mission',
       story: 'Our Story',
-      contact: 'Contact Us'
+      contact: 'Contact Us',
+      missionText: 'Empower individuals to check in with their health, every day—with clarity, compassion, and simplicity.',
+      storyText: 'Teresa Health was created to provide personalized daily health support, especially for those in underserved areas.',
+      version: 'Version 1.0'
     },
     faq: {
       title: 'Frequently Asked Questions',
       whatIs: 'What is Teresa Health?',
       dataSafe: 'Is my data safe?',
-      noMedical: 'Can I use this without medical knowledge?'
+      noMedical: 'Can I use this without medical knowledge?',
+      whatIsAnswer: 'Teresa Health is a personalized daily health assistant that helps you track both physical and mental health.',
+      dataSafeAnswer: 'Yes, all your data is stored securely and privately on your device.',
+      noMedicalAnswer: 'Absolutely! Teresa Health is designed to be user-friendly regardless of medical background.'
+    },
+    chatbot: {
+      buttonText: 'Talk to Teresa 💚',
+      greeting: 'Hi, I\'m Teresa, your health companion. What\'s bothering you today?',
+      askName: 'What should I call you?',
+      thinking: 'Teresa is thinking',
+      placeholder: 'Type your message...',
+      send: 'Send',
+      quickOptions: {
+        tired: 'Feeling tired or fatigued',
+        chest: 'Chest tightness or discomfort', 
+        headache: 'Headache or dizziness',
+        stomach: 'Stomach issues or nausea',
+        muscle: 'Muscle aches or stiffness',
+        sleep: 'Difficulty sleeping',
+        anxiety: 'Feeling anxious or stressed',
+        other: 'Other concern...'
+      },
+      medicalInfo: 'Would it be okay if I shared some general health information that might help?',
+      yesHelp: 'Yes, that would help',
+      noSupport: 'No, I\'d prefer just emotional support',
+      error: 'I\'m sorry, I\'m having trouble responding right now. Please try again in a moment.'
     }
   },
   ko: {
@@ -134,7 +224,21 @@ export const translations = {
       success: '성공!',
       confirm: '확인',
       yes: '예',
-      no: '아니오'
+      no: '아니오',
+      optional: '선택사항',
+      required: '필수',
+      hours: '시간',
+      kg: 'kg',
+      systolic: '수축기',
+      diastolic: '이완기', 
+      mgdl: 'mg/dL',
+      mmhg: 'mmHg',
+      none: '없음',
+      today: '오늘',
+      yesterday: '어제',
+      thisWeek: '이번 주',
+      generating: '생성 중...',
+      pleasewait: '잠시만 기다려주세요...'
     },
     navigation: {
       home: '홈',
@@ -172,7 +276,21 @@ export const translations = {
       bloodPressure: '혈압 (선택사항)',
       bloodSugar: '혈당 수치 (선택사항)',
       complete: '체크인 완료',
-      healthScore: '건강 점수'
+      healthScore: '건강 점수',
+      stiffness: '뻣뻣한 신체 부위가 있나요?',
+      stiffnessOptions: {
+        neck: '목',
+        shoulders: '어깨',
+        back: '등',
+        hips: '골반',
+        knees: '무릎',
+        ankles: '발목',
+        wrists: '손목',
+        none: '없음'
+      },
+      generatingQuestions: '맞춤형 질문 생성 중...',
+      customQuestions: '추가 건강 질문',
+      skipCustom: '추가 질문 건너뛰기'
     },
     midday: {
       title: '점심 기록',
@@ -180,7 +298,15 @@ export const translations = {
       meals: '오늘 무엇을 드셨나요?',
       symptoms: '특별한 증상이 있나요?',
       mood: '기분이 어떠신가요?',
-      notes: '추가 메모'
+      notes: '추가 메모',
+      moodOptions: {
+        great: '😊 매우 좋음',
+        good: '🙂 좋음',
+        okay: '😐 보통',
+        tired: '😴 피곤함',
+        stressed: '😰 스트레스',
+        unwell: '🤒 몸이 안 좋음'
+      }
     },
     night: {
       title: '저녁 성찰',
@@ -189,7 +315,17 @@ export const translations = {
       happy: '오늘 무엇이 행복하게 해주었나요?',
       stressLevel: '스트레스 수준을 평가해주세요 (1-10)',
       connected: '다른 사람들과 연결감을 느꼈나요?',
-      gratitude: '무엇에 감사하고 계신가요?'
+      gratitude: '무엇에 감사하고 계신가요?',
+      emotionalSupport: '감정적으로 어떤 상태신가요?',
+      chattingWithTeresa: '테레사와 대화 중...',
+      reflection: '일일 성찰',
+      questions: {
+        happy: '오늘 행복했던 일이 있으셨나요?',
+        stress: '오늘 스트레스 수준을 어떻게 평가하시겠어요?',
+        connected: '오늘 다른 사람들과 연결감을 느끼셨나요?',
+        grateful: '오늘 무엇에 감사하셨나요?',
+        challenges: '오늘 어떤 어려움이 있으셨나요?'
+      }
     },
     dashboard: {
       title: '건강 대시보드',
@@ -205,7 +341,20 @@ export const translations = {
       weight: '체중',
       bloodPressure: '혈압',
       bloodSugar: '혈당',
-      recommendedStretches: '추천 스트레칭'
+      recommendedStretches: '추천 스트레칭',
+      weeklyTrends: '주간 추세',
+      recentInsights: '최근 인사이트',
+      healthHistory: '건강 기록',
+      averageScore: '평균 점수',
+      improvement: '개선',
+      suggestion: '제안'
+    },
+    stretches: {
+      title: '추천 스트레칭',
+      forArea: '대상 부위',
+      description: '설명',
+      duration: '지속 시간',
+      instructions: '실행 방법'
     },
     settings: {
       title: '설정',
@@ -228,19 +377,50 @@ export const translations = {
       language: '언어',
       selectLanguage: '언어 선택',
       english: 'English',
-      korean: '한국어'
+      korean: '한국어',
+      profileSaved: '프로필이 성공적으로 저장되었습니다!',
+      dataCleared: '모든 데이터가 삭제되었습니다.',
+      confirmClearData: '정말로 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
     },
     about: {
       title: '테레사 헬스 소개',
       mission: '우리의 사명',
       story: '우리의 이야기',
-      contact: '연락처'
+      contact: '연락처',
+      missionText: '모든 개인이 매일 자신의 건강을 점검할 수 있도록 명확하고 따뜻하며 간단한 방식으로 지원합니다.',
+      storyText: '테레사 헬스는 특히 의료 서비스가 부족한 지역의 사람들에게 개인 맞춤형 일일 건강 지원을 제공하기 위해 만들어졌습니다.',
+      version: '버전 1.0'
     },
     faq: {
       title: '자주 묻는 질문',
       whatIs: '테레사 헬스란 무엇인가요?',
       dataSafe: '제 데이터는 안전한가요?',
-      noMedical: '의학 지식 없이도 사용할 수 있나요?'
+      noMedical: '의학 지식 없이도 사용할 수 있나요?',
+      whatIsAnswer: '테레사 헬스는 신체적, 정신적 건강을 모두 추적할 수 있도록 도와주는 개인 맞춤형 일일 건강 도우미입니다.',
+      dataSafeAnswer: '네, 모든 데이터는 귀하의 기기에 안전하고 비공개로 저장됩니다.',
+      noMedicalAnswer: '물론입니다! 테레사 헬스는 의학적 배경에 관계없이 사용자 친화적으로 설계되었습니다.'
+    },
+    chatbot: {
+      buttonText: '테레사와 대화하기 💚',
+      greeting: '안녕하세요, 저는 당신의 건강 동반자 테레사입니다. 오늘 무엇이 신경 쓰이시나요?',
+      askName: '어떻게 불러드리면 될까요?',
+      thinking: '테레사가 생각하고 있습니다',
+      placeholder: '메시지를 입력하세요...',
+      send: '전송',
+      quickOptions: {
+        tired: '피로하거나 지친 느낌',
+        chest: '가슴 답답함이나 불편함',
+        headache: '두통이나 어지러움',
+        stomach: '위장 문제나 메스꺼움',
+        muscle: '근육통이나 뻣뻣함',
+        sleep: '잠들기 어려움',
+        anxiety: '불안하거나 스트레스',
+        other: '기타 걱정...'
+      },
+      medicalInfo: '도움이 될 만한 일반적인 건강 정보를 공유해도 될까요?',
+      yesHelp: '네, 도움이 될 것 같아요',
+      noSupport: '아니요, 감정적 지지만 받고 싶어요',
+      error: '죄송하지만 지금 응답하는 데 문제가 있습니다. 잠시 후 다시 시도해 주세요.'
     }
   }
 }

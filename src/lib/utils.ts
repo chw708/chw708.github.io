@@ -40,3 +40,37 @@ export function getEmptyDailyCheckins() {
     date: getTodayDateString()
   }
 }
+
+// Utility function to format dates according to language
+export function formatDate(date: Date, language: 'en' | 'ko' = 'en'): string {
+  if (language === 'ko') {
+    return new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(date)
+  }
+  
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date)
+}
+
+// Utility function to format time according to language
+export function formatTime(date: Date, language: 'en' | 'ko' = 'en'): string {
+  if (language === 'ko') {
+    return new Intl.DateTimeFormat('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(date)
+  }
+  
+  return new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }).format(date)
+}

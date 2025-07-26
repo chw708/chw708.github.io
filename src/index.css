@@ -7,7 +7,18 @@
   }
   
   body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Poppins', 'Noto Sans KR', sans-serif;
+  }
+  
+  /* Korean text improvements */
+  html[lang="ko"] body {
+    font-family: 'Noto Sans KR', 'Poppins', sans-serif;
+    letter-spacing: -0.01em;
+  }
+  
+  html[lang="ko"] h1, html[lang="ko"] h2, html[lang="ko"] h3, html[lang="ko"] h4, html[lang="ko"] h5, html[lang="ko"] h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 }
 

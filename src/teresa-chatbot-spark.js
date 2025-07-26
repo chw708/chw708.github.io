@@ -35,17 +35,11 @@ class TeresaChatbotSpark {
     this.conversationHistory = this.getConversationHistory();
     this.empathyCount = 0;
 
+    // Get language preference
+    this.language = this.getLanguagePreference();
+    
     // Common symptoms for quick selection
-    this.commonSymptoms = [
-      'Feeling tired or fatigued',
-      'Chest tightness or discomfort',
-      'Headache or dizziness',
-      'Stomach issues or nausea',
-      'Muscle aches or stiffness',
-      'Difficulty sleeping',
-      'Feeling anxious or stressed',
-      'Other concern...'
-    ];
+    this.commonSymptoms = this.getLocalizedSymptoms();
 
     this.init();
   }
@@ -372,7 +366,7 @@ class TeresaChatbotSpark {
       </div>
       <div class="teresa-chatbot-messages" id="teresa-messages"></div>
       <div class="teresa-chatbot-input">
-        <input type="text" placeholder="Type your message..." id="teresa-input" maxlength="500">
+        <input type="text" placeholder="${this.getLocalizedText('placeholder')}" id="teresa-input" maxlength="500">
         <button class="teresa-send-button" id="teresa-send">➤</button>
       </div>
     `;
@@ -425,10 +419,13 @@ class TeresaChatbotSpark {
   initializeConversation() {
     if (this.conversationHistory.length === 0) {
       if (!this.userName) {
-        this.addMessage("Hi, I'm Teresa, your health companion. What should I call you?", 'bot');
+        this.addMessage(this.getLocalizedText('askName'), 'bot');
         this.showNameInput();
       } else {
-        this.addMessage(`Hello ${this.userName}! I'm Teresa, your health companion. What's bothering you today?`, 'bot');
+        const greeting = this.language === 'ko' 
+          ? `안녕하세요 ${this.userName}님! 저는 당신의 건강 동반자 테레사입니다. 오늘 무엇이 신경 쓰이시나요?`
+          : `Hello ${this.userName}! I'm Teresa, your health companion. What's bothering you today?`;
+        this.addMessage(greeting, 'bot');
         this.showQuickOptions();
       }
     } else {
@@ -444,10 +441,13 @@ class TeresaChatbotSpark {
    * Show name input interface
    */
   showNameInput() {
+    const namePlaceholder = this.language === 'ko' ? '이름을 입력해주세요' : 'Enter your name';
+    const continueText = this.language === 'ko' ? '계속' : 'Continue';
+    
     const nameInputHtml = `
       <div class="teresa-name-input">
-        <input type="text" placeholder="Enter your name" id="teresa-name-input" maxlength="30">
-        <button onclick="window.teresaChatbotSpark.setUserName()">Continue</button>
+        <input type="text" placeholder="${namePlaceholder}" id="teresa-name-input" maxlength="30">
+        <button onclick="window.teresaChatbotSpark.setUserName()">${continueText}</button>
       </div>
     `;
     
@@ -472,8 +472,11 @@ class TeresaChatbotSpark {
       const nameInputDiv = nameInput.closest('.teresa-name-input');
       if (nameInputDiv) nameInputDiv.remove();
       
-      // Continue conversation
-      this.addMessage(`Nice to meet you, ${name}! What's bothering you today?`, 'bot');
+      // Continue conversation with localized greeting
+      const greeting = this.language === 'ko' 
+        ? `만나서 반갑습니다, ${name}님! 오늘 무엇이 신경 쓰이시나요?`
+        : `Nice to meet you, ${name}! What's bothering you today?`;
+      this.addMessage(greeting, 'bot');
       this.showQuickOptions();
     }
   }
@@ -575,14 +578,14 @@ class TeresaChatbotSpark {
       // After 2-3 empathic exchanges, offer medical insight option
       if (this.empathyCount >= 2 && this.empathyCount <= 3) {
         setTimeout(() => {
-          this.addMessage("Would it be okay if I shared some general health information that might help?", 'bot');
+          this.addMessage(this.getLocalizedText('medicalInfo'), 'bot');
           this.showYesNoOptions();
         }, 1500);
       }
       
     } catch (error) {
       this.hideTypingIndicator();
-      this.addMessage("I'm sorry, I'm having trouble responding right now. Please try again in a moment.", 'bot');
+      this.addMessage(this.getLocalizedText('error'), 'bot');
       console.error('Teresa Chatbot Error:', error);
     }
 
@@ -596,8 +599,8 @@ class TeresaChatbotSpark {
   showYesNoOptions() {
     const optionsHtml = `
       <div class="teresa-quick-options">
-        <button class="teresa-quick-option" onclick="window.teresaChatbotSpark.handleMedicalInfoResponse(true)">Yes, that would help</button>
-        <button class="teresa-quick-option" onclick="window.teresaChatbotSpark.handleMedicalInfoResponse(false)">No, I'd prefer just emotional support</button>
+        <button class="teresa-quick-option" onclick="window.teresaChatbotSpark.handleMedicalInfoResponse(true)">${this.getLocalizedText('yesHelp')}</button>
+        <button class="teresa-quick-option" onclick="window.teresaChatbotSpark.handleMedicalInfoResponse(false)">${this.getLocalizedText('noSupport')}</button>
       </div>
     `;
     
@@ -616,11 +619,17 @@ class TeresaChatbotSpark {
     if (quickOptions) quickOptions.remove();
     
     if (wantsMedicalInfo) {
-      this.addMessage("Yes, that would help", 'user');
-      this.addMessage("I'll share some general information that might be relevant. Remember, this isn't medical advice, just educational information.", 'bot');
+      this.addMessage(this.getLocalizedText('yesHelp'), 'user');
+      const medicalInfoResponse = this.language === 'ko' 
+        ? "관련될 수 있는 일반적인 정보를 공유드리겠습니다. 이는 의료 조언이 아니라 교육적 정보임을 기억해 주세요."
+        : "I'll share some general information that might be relevant. Remember, this isn't medical advice, just educational information.";
+      this.addMessage(medicalInfoResponse, 'bot');
     } else {
-      this.addMessage("No, I'd prefer just emotional support", 'user');
-      this.addMessage("Of course! I'm here to listen and support you emotionally. Tell me more about how you're feeling.", 'bot');
+      this.addMessage(this.getLocalizedText('noSupport'), 'user');
+      const emotionalResponse = this.language === 'ko'
+        ? "물론입니다! 저는 여기서 듣고 감정적으로 지지해드리겠습니다. 기분이 어떤지 더 말씀해 주세요."
+        : "Of course! I'm here to listen and support you emotionally. Tell me more about how you're feeling.";
+      this.addMessage(emotionalResponse, 'bot');
     }
   }
 
@@ -637,10 +646,19 @@ class TeresaChatbotSpark {
           `${msg.role === 'user' ? 'User' : 'Teresa'}: ${msg.content}`
         ).join('\n');
 
-        // Create the prompt using Spark's template system
+        // Create the prompt using Spark's template system with language support
+        const isKorean = this.language === 'ko';
+        const languageInstructions = isKorean 
+          ? `- Respond in Korean (한국어)
+- Use respectful and caring Korean expressions
+- Address the user politely using Korean honorifics when appropriate`
+          : `- Respond in English
+- Use warm and caring language`;
+
         const prompt = window.spark.llmPrompt`You are Teresa, a compassionate health companion chatbot. Your role is to provide emotional support followed by practical health guidance.
 
 IMPORTANT GUIDELINES:
+${languageInstructions}
 - Start with 1 sentence of empathy and emotional validation
 - Follow immediately with 1-2 sentences of practical advice or general health information
 - NEVER provide medical diagnosis or specific treatment advice
@@ -685,7 +703,22 @@ Provide empathy followed by practical advice:`;
     const lowerMessage = userMessage.toLowerCase();
     
     // Enhanced mock responses with empathy + practical advice
-    const responses = {
+    const responses = this.language === 'ko' ? {
+      // Korean responses
+      피로: "계속 피곤하신 것이 얼마나 힘드실지 이해합니다. 7-9시간 수면을 우선시하고, 충분한 수분 섭취와 짧은 산책 같은 가벼운 운동을 고려해 보세요. 지속된다면 의료진과 상담하는 것이 좋겠습니다.",
+      지친: "피로감이 너무 압도적일 수 있어요. 규칙적인 영양 식사와 하루 중 짧은 휴식을 취하시길 바랍니다. 지속적이라면 의사와 상담해 보세요.",
+      가슴: "정말 무섭고 걱정스러우실 것 같아요. 천천히 깊게 숨을 쉬고 편안한 자세로 앉아보세요. 가슴 통증, 호흡곤란이 있거나 악화되면 즉시 의료진의 진료를 받으세요.",
+      심장: "심장 관련 증상으로 걱정되는 마음 충분히 이해합니다. 침착함을 유지하고 카페인이나 격한 활동을 피하세요. 가슴 통증, 불규칙한 심박, 호흡곤란이 있다면 의료진에게 연락하세요.",
+      두통: "두통은 정말 압도적이고 모든 것을 더 어렵게 만들 수 있어요. 충분한 수분 섭취, 조용하고 어두운 곳에서 휴식, 관자놀이 마사지를 해보세요. 잦거나 심하다면 의사 진료를 고려하세요.",
+      통증: "통증을 겪고 계시는 것이 정말 안타깝습니다. 가벼운 스트레칭, 온찜질 또는 냉찜질, 충분한 휴식을 시도해 보세요. 심하거나 지속적이라면 의료진과 상담하는 것이 중요합니다.",
+      불안: "불안한 마음을 나누어 주셔서 용기가 있으신 것 같아요. 천천히 깊게 숨을 쉬고 지금 당장 조절할 수 있는 것에 집중해 보세요. 상담사나 의사와 불안 관리 기법에 대해 이야기하는 것을 고려해 보세요.",
+      스트레스: "스트레스가 때로는 너무 압도적일 수 있어요. 깊은 호흡이나 짧은 산책을 위해 몇 분을 내보세요. 오늘 작고 관리 가능한 목표를 설정하는 것도 더 통제감을 느끼는 데 도움이 될 수 있어요.",
+      잠: "수면 문제는 기분, 에너지, 신체적 느낌 등 모든 것에 영향을 줄 수 있어요. 취침 루틴 만들기, 잠자기 전 화면 피하기, 방을 시원하고 어둡게 유지하기를 시도해 보세요. 불면증이 지속되면 의사와 상의하세요.",
+      어지러움: "어지러움은 정말 불안하고 무서울 수 있어요. 즉시 앉고 수분을 충분히 섭취해 보세요. 심하거나 빈번하거나 다른 증상이 동반되면 의료진의 평가를 받으세요.",
+      메스꺼움: "메스꺼움은 정말 괴롭고 지치게 만들 수 있어요. 맑은 액체를 조금씩 마시고, 크래커 같은 담백한 음식을 소량 드시고, 신선한 공기를 마셔보세요. 수분을 유지할 수 없거나 지속되면 의료진에게 연락하세요.",
+      걱정: "정말 걱정스러운 시간을 보내고 계신 것 같아요. 한 번에 한 가지씩 집중하고 신뢰할 수 있는 사람과 이야기하는 것을 고려해 보세요. 건강 걱정이 일상생활에 영향을 미치고 있다면 주저하지 말고 의료진에게 연락하세요."
+    } : {
+      // English responses  
       tired: "I can understand how exhausting it must feel to be constantly tired. Try to prioritize 7-9 hours of sleep, stay hydrated, and consider gentle movement like a short walk. If this persists, it's worth discussing with a healthcare provider.",
       fatigue: "Feeling fatigued can be so overwhelming. Make sure you're eating regular nutritious meals and taking short breaks throughout your day. Consider checking with your doctor if this has been ongoing.",
       chest: "That must feel really scary and concerning. Try taking slow, deep breaths and sitting in a comfortable position. If you experience chest pain, shortness of breath, or it worsens, please seek medical attention promptly.",
@@ -708,7 +741,12 @@ Provide empathy followed by practical advice:`;
     }
     
     // Default empathetic responses with practical advice
-    const defaultResponses = [
+    const defaultResponses = this.language === 'ko' ? [
+      "이렇게 나누어 주셔서 감사합니다. 어려운 시간을 보내고 계신 것 같네요. 한 번에 한 걸음씩 나아가시고, 걱정이 되신다면 주저하지 말고 의료진에게 연락하세요.",
+      "이것이 당신에게 부담이 되고 있다는 것을 알 수 있고, 당신의 감정은 완전히 타당합니다. 신뢰할 수 있는 사람이나 당신의 상황에 개인 맞춤형 안내를 제공할 수 있는 의료진과 이야기하는 것을 고려해 보세요.",
+      "정말 다루기 어려운 일인 것 같고, 저는 여기서 당신을 지지하겠습니다. 충분한 수분 섭취, 휴식, 증상이 지속되거나 악화되면 의료 조언을 구하는 등 기본적인 자기 관리에 집중하세요.",
+      "이것을 저와 나누어 주셔서 감사하고, 당신의 걱정은 중요합니다. 자신에게 친절하게 대하시고 건강이 걱정될 때 전문적인 의료 조언을 구하는 것이 항상 좋은 단계라는 것을 기억하세요."
+    ] : [
       "Thank you for sharing that with me, it sounds like you're going through something difficult. Try to take things one step at a time and don't hesitate to reach out to a healthcare provider if you're concerned.",
       "I can hear that this is weighing on you, and your feelings are completely valid. Consider talking to someone you trust or a healthcare professional who can provide personalized guidance for your situation.",
       "That sounds really challenging to deal with, and I'm here to support you. Focus on basic self-care like staying hydrated, getting rest, and seeking medical advice if symptoms persist or worsen.",
@@ -740,7 +778,7 @@ Provide empathy followed by practical advice:`;
     const typingDiv = document.createElement('div');
     typingDiv.className = 'teresa-message bot teresa-typing';
     typingDiv.innerHTML = `
-      Teresa is thinking
+      ${this.getLocalizedText('thinking')}
       <div class="teresa-typing-dots">
         <div class="teresa-typing-dot"></div>
         <div class="teresa-typing-dot"></div>
@@ -791,6 +829,79 @@ Provide empathy followed by practical advice:`;
 
   saveConversationHistory() {
     localStorage.setItem('teresa-conversation', JSON.stringify(this.conversationHistory.slice(-20)));
+  }
+
+  /**
+   * Get language preference from localStorage
+   */
+  getLanguagePreference() {
+    try {
+      const stored = localStorage.getItem('app-language');
+      return stored === 'ko' ? 'ko' : 'en';
+    } catch {
+      return 'en';
+    }
+  }
+
+  /**
+   * Get localized symptoms list
+   */
+  getLocalizedSymptoms() {
+    if (this.language === 'ko') {
+      return [
+        '피로하거나 지친 느낌',
+        '가슴 답답함이나 불편함',
+        '두통이나 어지러움',
+        '위장 문제나 메스꺼움',
+        '근육통이나 뻣뻣함',
+        '잠들기 어려움',
+        '불안하거나 스트레스',
+        '기타 걱정...'
+      ];
+    }
+    
+    return [
+      'Feeling tired or fatigued',
+      'Chest tightness or discomfort',
+      'Headache or dizziness',
+      'Stomach issues or nausea',
+      'Muscle aches or stiffness',
+      'Difficulty sleeping',
+      'Feeling anxious or stressed',
+      'Other concern...'
+    ];
+  }
+
+  /**
+   * Get localized text
+   */
+  getLocalizedText(key) {
+    const texts = {
+      en: {
+        greeting: "Hi, I'm Teresa, your health companion. What's bothering you today?",
+        askName: "What should I call you?",
+        thinking: "Teresa is thinking",
+        placeholder: "Type your message...",
+        send: "Send",
+        medicalInfo: "Would it be okay if I shared some general health information that might help?",
+        yesHelp: "Yes, that would help",
+        noSupport: "No, I'd prefer just emotional support",
+        error: "I'm sorry, I'm having trouble responding right now. Please try again in a moment."
+      },
+      ko: {
+        greeting: "안녕하세요, 저는 당신의 건강 동반자 테레사입니다. 오늘 무엇이 신경 쓰이시나요?",
+        askName: "어떻게 불러드리면 될까요?",
+        thinking: "테레사가 생각하고 있습니다",
+        placeholder: "메시지를 입력하세요...",
+        send: "전송",
+        medicalInfo: "도움이 될 만한 일반적인 건강 정보를 공유해도 될까요?",
+        yesHelp: "네, 도움이 될 것 같아요",
+        noSupport: "아니요, 감정적 지지만 받고 싶어요",
+        error: "죄송하지만 지금 응답하는 데 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+      }
+    };
+    
+    return texts[this.language]?.[key] || texts.en[key] || key;
   }
 
   /**
