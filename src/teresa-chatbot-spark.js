@@ -864,6 +864,10 @@ Provide empathy followed by practical advice:`;
       'Stomach issues or nausea',
       'Muscle aches or stiffness',
       'Difficulty sleeping',
+    ];
+  }
+
+  /**
    * Clear conversation history
    */
   clearHistory() {
