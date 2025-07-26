@@ -638,23 +638,27 @@ class TeresaChatbotSpark {
         ).join('\n');
 
         // Create the prompt using Spark's template system
-        const prompt = window.spark.llmPrompt`You are Teresa, a compassionate health companion chatbot. Your primary role is to provide emotional support and empathy to users experiencing health concerns.
+        const prompt = window.spark.llmPrompt`You are Teresa, a compassionate health companion chatbot. Your role is to provide emotional support followed by practical health guidance.
 
 IMPORTANT GUIDELINES:
-- ALWAYS start with empathy and emotional validation
-- NEVER provide medical diagnosis or specific treatment advice  
-- Use warm, conversational language (2-3 sentences max)
-- Show genuine concern and understanding
-- Only after 2-3 empathic exchanges, you may offer general health education (not diagnosis)
+- Start with 1 sentence of empathy and emotional validation
+- Follow immediately with 1-2 sentences of practical advice or general health information
+- NEVER provide medical diagnosis or specific treatment advice
+- Keep responses to exactly 2-3 sentences total
+- Offer actionable suggestions like rest, hydration, gentle movement, breathing exercises, or seeing a doctor
 - Always encourage consulting healthcare professionals for serious concerns
 - Remember the user's name: ${this.userName || 'User'}
+
+RESPONSE STRUCTURE:
+1. Emotional validation (1 sentence)
+2. Practical guidance (1-2 sentences)
 
 Recent conversation:
 ${conversationContext}
 
 User's current message: ${userMessage}
 
-Respond with empathy and care:`;
+Provide empathy followed by practical advice:`;
 
         // Call Spark's LLM API
         const aiResponse = await window.spark.llm(prompt, 'gpt-4o-mini');
@@ -680,20 +684,20 @@ Respond with empathy and care:`;
   getMockResponse(userMessage) {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Enhanced mock responses based on keywords
+    // Enhanced mock responses with empathy + practical advice
     const responses = {
-      tired: "I can understand how exhausting it must feel to be constantly tired. That sounds really draining and can affect so many parts of your day.",
-      fatigue: "Feeling fatigued can be so overwhelming. Your body is telling you something, and that exhaustion is real and valid.",
-      chest: "That must feel really scary and concerning. Chest discomfort can be so unsettling, and I want you to know your feelings about this are completely valid.",
-      heart: "It's completely understandable to feel worried about heart-related symptoms. That kind of concern can be really frightening.",
-      headache: "Headaches can be so overwhelming and make everything feel more difficult. I'm sorry you're dealing with this discomfort.",
-      pain: "I'm really sorry you're experiencing pain. That must be incredibly difficult to deal with, especially when it affects your daily life.",
-      anxiety: "It takes courage to share that you're feeling anxious. Those feelings are real and valid, and you're not alone in experiencing them.",
-      stress: "Stress can feel so overwhelming sometimes. It sounds like you're carrying a heavy emotional load right now.",
-      sleep: "Sleep troubles can affect everything - your mood, energy, and how you feel physically. That must be really frustrating.",
-      dizzy: "Feeling dizzy can be really unsettling and scary. I can understand why that would be concerning for you.",
-      nausea: "Nausea can make you feel so miserable and drained. It's hard to focus on anything else when you're feeling that way.",
-      worried: "It sounds like you're going through a really worrying time. Those concerns are completely valid and understandable."
+      tired: "I can understand how exhausting it must feel to be constantly tired. Try to prioritize 7-9 hours of sleep, stay hydrated, and consider gentle movement like a short walk. If this persists, it's worth discussing with a healthcare provider.",
+      fatigue: "Feeling fatigued can be so overwhelming. Make sure you're eating regular nutritious meals and taking short breaks throughout your day. Consider checking with your doctor if this has been ongoing.",
+      chest: "That must feel really scary and concerning. Try taking slow, deep breaths and sitting in a comfortable position. If you experience chest pain, shortness of breath, or it worsens, please seek medical attention promptly.",
+      heart: "It's completely understandable to feel worried about heart-related symptoms. Try to stay calm and avoid caffeine or strenuous activity. If you're experiencing chest pain, irregular heartbeat, or difficulty breathing, please contact a healthcare provider.",
+      headache: "Headaches can be so overwhelming and make everything feel more difficult. Try staying hydrated, resting in a quiet dark room, and gently massaging your temples. If headaches are frequent or severe, consider seeing a doctor.",
+      pain: "I'm really sorry you're experiencing pain. Try gentle stretching, applying heat or cold, and getting adequate rest. If the pain is severe or persistent, it's important to consult with a healthcare professional.",
+      anxiety: "It takes courage to share that you're feeling anxious. Try taking slow, deep breaths and focus on what you can control right now. Consider talking to a counselor or your doctor about anxiety management techniques.",
+      stress: "Stress can feel so overwhelming sometimes. Try taking a few minutes for deep breathing or a brief walk outside. Setting small, manageable goals for today can also help you feel more in control.",
+      sleep: "Sleep troubles can affect everything - your mood, energy, and how you feel physically. Try creating a bedtime routine, avoiding screens before sleep, and keeping your room cool and dark. If insomnia persists, discuss it with your doctor.",
+      dizzy: "Feeling dizzy can be really unsettling and scary. Sit down immediately and try to stay hydrated. If dizziness is severe, frequent, or accompanied by other symptoms, please seek medical evaluation.",
+      nausea: "Nausea can make you feel so miserable and drained. Try sipping clear fluids, eating small bland foods like crackers, and getting fresh air. If you can't keep fluids down or it persists, contact a healthcare provider.",
+      worried: "It sounds like you're going through a really worrying time. Try to focus on one thing at a time and consider talking to someone you trust. If health worries are affecting your daily life, don't hesitate to reach out to a healthcare professional."
     };
     
     // Find matching response
@@ -703,12 +707,12 @@ Respond with empathy and care:`;
       }
     }
     
-    // Default empathetic response
+    // Default empathetic responses with practical advice
     const defaultResponses = [
-      "Thank you for sharing that with me. It sounds like you're going through something difficult, and I want you to know that your feelings are completely valid.",
-      "I can hear that this is weighing on you. You're not alone in feeling this way, and it takes strength to reach out.",
-      "That sounds really challenging to deal with. I'm here to listen and support you through whatever you're experiencing.",
-      "I appreciate you trusting me with this. Your concerns are important, and I want you to know that what you're feeling matters."
+      "Thank you for sharing that with me, it sounds like you're going through something difficult. Try to take things one step at a time and don't hesitate to reach out to a healthcare provider if you're concerned.",
+      "I can hear that this is weighing on you, and your feelings are completely valid. Consider talking to someone you trust or a healthcare professional who can provide personalized guidance for your situation.",
+      "That sounds really challenging to deal with, and I'm here to support you. Focus on basic self-care like staying hydrated, getting rest, and seeking medical advice if symptoms persist or worsen.",
+      "I appreciate you trusting me with this, and your concerns are important. Try to be gentle with yourself and remember that seeking professional medical advice is always a good step when you're worried about your health."
     ];
     
     return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
