@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta charset="utf-8">
-    <title>Teresa Health</title>
+    <title>Teresa Health - Your Daily Health Companion</title>
     <script>
-        // GitHub Pages SPA redirect
-        var pathName = window.location.pathname;
-        var repo = '/';
-        var path = pathName.slice(repo.length);
-        if (path && path !== '/') {
-            sessionStorage.redirect = window.location.href;
-        }
-        window.location.replace(window.location.origin + repo);
+      // Store the current path so we can redirect after loading
+      var pathSegmentsToKeep = 0;
+      var l = window.location;
+      sessionStorage.setItem('redirect',
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
     </script>
-</head>
-<body>
-</body>
+  </head>
+  <body>
+    <p>Redirecting...</p>
+  </body>
 </html>
