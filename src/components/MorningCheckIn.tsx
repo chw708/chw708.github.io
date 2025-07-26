@@ -93,26 +93,21 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
       setDailyQuestions((prev: any[]) => [initialQuestions, ...prev.slice(0, 9)])
 
       setAiGenerating(true)
-      setAiGenerating(true)
       
       setTimeout(async () => {
-      setTimeout(async () => {
+        try {
           // Minimal context for fastest generation
           const prompt = spark.llmPrompt`4개 한국어 간단 건강질문.
-          const prompt = spark.llmPrompt`4개 한국어 간단 건강질문.
-주제: 수분, 호흡, 균형, 기분, 식욕, 편안함
 주제: 수분, 호흡, 균형, 기분, 식욕, 편안함
 JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
-JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
-          const response = await spark.llm(prompt, "gpt-4o-mini", true)
           const response = await spark.llm(prompt, "gpt-4o-mini", true)
           
-          
-          const validQuestions = questions.filter((q: any) => q.text && q.id)
+          const questions = JSON.parse(response)
           const validQuestions = questions.filter((q: any) => q.text && q.id)
           if (validQuestions.length > 0) {
-              const currentEntry = prev.find((q: any) => q.date === today)
             setDailyQuestions((prev: any[]) => {
+              const currentEntry = prev.find((q: any) => q.date === today)
+              if (currentEntry && currentEntry.source === 'fallback') {
                 const aiQuestions = {
                   date: today,
                   questions: validQuestions,
@@ -120,62 +115,64 @@ JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
                   source: 'ai'
                 }
                 return [aiQuestions, ...prev.filter((q: any) => q.date !== today)]
-                }
-              return prev
               }
+              return prev
+            })
           }
-          
         } catch (error) {
-          setAiGenerating(false)
-        }
-      }, 0)
+          console.log('AI questions failed, using fallback')
         } finally {
           setAiGenerating(false)
         }
-      }, 0)]) // Remove dependencies to prevent re-runs
+      }, 0)
+    }
 
-much faster selection
+    generateDailyQuestions()
+  }, []) // Remove dependencies to prevent re-runs
+
+  // Optimized fallback question function - much faster selection
   const getRandomFallbackQuestions = () => {
     const quickQuestions = [
       {
-  // Optimized fallback question function - much faster selection
-        text: "아침에 일어났을 때 기분은 어떤가요?",
-    const quickQuestions = [
-        required: false
         id: `morning_energy_${Date.now()}`,
         text: "아침에 일어났을 때 기분은 어떤가요?",
-        id: `morning_hydration_${Date.now() + 1}`,
-        text: "목마름을 느끼시나요?",
+        type: "scale",
+        required: false
       },
       {
         id: `morning_hydration_${Date.now() + 1}`,
         text: "목마름을 느끼시나요?",
-        id: `morning_comfort_${Date.now() + 2}`,
-        text: "전체적으로 몸이 편안한가요?",
+        type: "boolean",
+        required: false
       },
       {
         id: `morning_comfort_${Date.now() + 2}`,
         text: "전체적으로 몸이 편안한가요?",
+        type: "boolean",
+        required: false
+      },
+      {
         id: `morning_readiness_${Date.now() + 3}`,
         text: "하루를 시작할 준비가 되셨나요?",
         type: "boolean",
-      {
+        required: false
       }
-        text: "하루를 시작할 준비가 되셨나요?",
-    
-    return quickQuestions
-  }
     ]
     
     return quickQuestions
-    const questions = todayQs?.questions
-    // Ensure we always return an array
-  const getTodaysQuestions = (): DailyQuestion[] => {
   }
 
-    // Ensure we always return an arrayingData): number => {
-    return Array.isArray(questions) ? questions : [] for accurate assessment
+  const getTodaysQuestions = (): DailyQuestion[] => {
+    const todayQs = dailyQuestions.find((q: any) => q.date === today)
+    const questions = todayQs?.questions
+    
+    // Ensure we always return an array
+    return Array.isArray(questions) ? questions : []
   }
+
+  const calculateHealthScore = (data: MorningData): number => {
+    let score = 85 // Start with a fair baseline for accurate assessment
+    
     // Sleep score (0-12 points) - realistic sleep assessment
     if (data.sleep !== null) {
       if (data.sleep < 4 || data.sleep > 10) score -= 12 // Severely inadequate sleep
@@ -590,21 +587,19 @@ much faster selection
         // Always show questions immediately - no loading state
         if (questionIndex < 4) {
           // Use fallback if AI questions aren't ready yet, with better fallback mapping
-          const todaysQuestions = getTodaysQuestions()
-        // Always show questions immediately - no loading state
-        if (questionIndex < 4) {
-          // Use fallback if AI questions aren't ready yet, with better fallback mapping
-          const todaysQuestions = getTodaysQuestions()
           let question
-            // Enhanced fallback questions based on question index
           if (todaysQuestions.length > questionIndex) {
-              {
+            question = todaysQuestions[questionIndex]
           } else {
+            // Enhanced fallback questions based on question index
+            const fallbackQuestions = [
+              {
+                id: `fallback_energy_${Date.now()}`,
                 text: "아침에 일어났을 때 전체적인 컨디션은 어떤가요?",
                 type: 'scale',
                 required: false
               },
-                text: "아침에 일어났을 때 전체적인 컨디션은 어떤가요?",
+              {
                 id: `fallback_comfort_${Date.now() + 1}`,
                 text: "몸이 전반적으로 편안한가요?",
                 type: 'boolean',
@@ -629,16 +624,21 @@ much faster selection
           return (
             <div className="space-y-4">
               <Label className="text-base font-medium">
-          n.text}
-          return (
-              
-              {question.type === 'scale' && (
-                <div className="space-y-3">
+                {question.text}
                 {aiGenerating && currentStep >= 7 && (
                   <span className="ml-2 text-xs text-muted-foreground">
                     🤖 개인화 중...
                   </span>
-                )}? "default" : "outline"}
+                )}
+              </Label>
+              
+              {question.type === 'scale' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                      <Button
+                        key={level}
+                        variant={data.additionalQuestions[question.id] === level ? "default" : "outline"}
                         onClick={() => setData(prev => ({
                           ...prev,
                           additionalQuestions: { ...prev.additionalQuestions, [question.id]: level }
@@ -664,15 +664,6 @@ much faster selection
                       onCheckedChange={() => setData(prev => ({
                         ...prev,
                         additionalQuestions: { ...prev.additionalQuestions, [question.id]: true }
-                      }))}
-                    />
-                    <Label htmlFor="yes" className="text-base">네</Label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="no"
-                      checked={data.additionalQuestions[question.id] === false}
-                      onCheckedChange={() => setData(prev => ({
                       }))}
                     />
                     <Label htmlFor="yes" className="text-base">네</Label>
@@ -712,6 +703,15 @@ much faster selection
                         checked={data.additionalQuestions[question.id] === option}
                         onCheckedChange={() => setData(prev => ({
                           ...prev,
+                          additionalQuestions: { ...prev.additionalQuestions, [question.id]: option }
+                        }))}
+                      />
+                      <Label htmlFor={`option-${index}`} className="text-base">{option}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               {!question.required && (
                 <p className="text-sm text-muted-foreground">이 질문은 선택사항입니다</p>
               )}
