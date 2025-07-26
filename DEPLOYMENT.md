@@ -1,72 +1,78 @@
-# GitHub Pages Deployment Guide for Teresa Health
+# Teresa Health Deployment Guide
 
-## Quick Setup
+## Current Status
 
-Your Teresa Health app is now configured for GitHub Pages deployment with the latest fixes for proper loading.
+Your Teresa Health app is configured for GitHub Pages deployment. Here's what needs to be done to make it work at https://chw708.github.io:
 
-### Recent Fixes Applied:
-- ✅ Updated Vite configuration for user GitHub Pages site (`chw708.github.io`)
-- ✅ Fixed base path configuration to use `/` for user sites
-- ✅ Updated deployment workflow to use modern GitHub Pages actions
-- ✅ Added `.nojekyll` file to prevent Jekyll processing
-- ✅ Updated Node.js version to 20 in deployment workflow
+## Step-by-Step Deployment:
 
-### Steps to Deploy:
+### 1. GitHub Repository Setup
+- Your repository should be named `chw708.github.io`
+- Push all these files to the main branch of that repository
 
-1. **Make sure your repository is correctly set up:**
-   - Repository name: `chw708.github.io` ✓
-   - Repository should be public ✓
-   
-2. **Push your code to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Fix GitHub Pages deployment - app ready"
-   git push origin main
-   ```
+### 2. Enable GitHub Pages
+1. Go to your repository on GitHub
+2. Click "Settings" tab
+3. Scroll down to "Pages" in the left sidebar
+4. Under "Source", select "GitHub Actions"
+5. Save the settings
 
-3. **Enable GitHub Pages:**
-   - Go to: https://github.com/chw708/chw708.github.io/settings/pages
-   - Under "Source", select "GitHub Actions"
-   - The deployment will start automatically
+### 3. Automatic Deployment
+- The GitHub Actions workflow (`.github/workflows/deploy.yml`) will automatically:
+  - Build your React app when you push to main branch
+  - Deploy it to GitHub Pages
+  - Make it accessible at https://chw708.github.io
 
-4. **Access your app:**
-   - Your app will be available at: https://chw708.github.io
-   - First deployment takes 5-10 minutes
+### 4. Verification
+After pushing, check:
+1. Go to the "Actions" tab in your GitHub repository
+2. Watch the "Deploy to GitHub Pages" workflow run
+3. Once complete (green checkmark), visit https://chw708.github.io
 
-## What happens automatically:
+## Files Configured for Deployment:
 
-- When you push to the `main` branch, GitHub Actions will:
-  1. Install dependencies
-  2. Build your React app with production settings
-  3. Deploy it to GitHub Pages
-  4. Make it available at your GitHub Pages URL
-
-## Repository Settings Check:
-
-Make sure these settings are correct in your GitHub repository:
-
-1. **Repository name:** `chw708.github.io` (exactly this)
-2. **Visibility:** Public
-3. **Pages source:** GitHub Actions (not "Deploy from a branch")
+✅ `index.html` - Main HTML file with proper React app setup
+✅ `vite.config.ts` - Build configuration for GitHub Pages
+✅ `.github/workflows/deploy.yml` - Automated deployment workflow
+✅ `public/404.html` - SPA routing support for GitHub Pages
+✅ `public/.nojekyll` - Prevents Jekyll processing
+✅ `package.json` - Build scripts configured
 
 ## Troubleshooting:
 
-**App not loading?**
-- Wait 10 minutes after first deployment
-- Check repository is public
-- Verify Pages source is set to "GitHub Actions"
-- Clear browser cache and try again
+### If the site shows 404:
+- Verify repository name is exactly `chw708.github.io`
+- Check that GitHub Pages source is set to "GitHub Actions"
+- Wait a few minutes after deployment completes
 
-**Build failing?**
-- Check the "Actions" tab in your GitHub repository
-- Look for error messages in the build logs
-- Ensure all dependencies are properly installed
+### If the site loads but appears broken:
+- Check the browser console for any JavaScript errors
+- Verify all assets are loading properly
+- Check the GitHub Actions logs for build warnings
 
-**404 on page refresh?**
-- This is normal for single-page apps on GitHub Pages
-- The app will work correctly when loaded from the home page
+### If deployment fails:
+- Check the GitHub Actions tab for error details
+- Ensure all dependencies are properly listed in package.json
+- Verify the build script runs without errors
 
-## Development:
+## Local Testing:
 
-- For local development: `npm run dev`
-- Your production app will be automatically built and deployed when you push to GitHub
+To test locally before deploying:
+
+```bash
+npm install
+npm run build:gh-pages
+```
+
+The built files will be in the `dist/` folder, which is what gets deployed to GitHub Pages.
+
+---
+
+Your Teresa Health app includes:
+- 🌅 Morning health check-ins
+- 🍽️ Midday meal and mood logging  
+- 🌙 Evening reflection and emotional support
+- 📊 Health dashboard with trends
+- 🤖 AI-powered Teresa chatbot
+- 🌍 Multi-language support (English/Korean)
+- 📱 Fully responsive mobile-first design

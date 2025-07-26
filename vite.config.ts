@@ -28,5 +28,18 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-button']
+        }
+      }
+    }
   },
+  server: {
+    port: 5000,
+    strictPort: true,
+    host: true
+  }
 });

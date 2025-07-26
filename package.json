@@ -7,7 +7,7 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "NODE_ENV=production tsc -b --noCheck && vite build",
-        "build:gh-pages": "NODE_ENV=production vite build",
+        "build:gh-pages": "NODE_ENV=production vite build --base=/",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"
