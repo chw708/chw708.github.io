@@ -119,7 +119,7 @@ JSON 형식으로 정확히 다음과 같이 응답해주세요 (정확한 형�
   {"id":"custom_q1","text":"건강 관련 질문","type":"scale","required":false},
   {"id":"custom_q2","text":"다른 건강 질문","type":"boolean","required":false},
   {"id":"custom_q3","text":"추가 건강 질문","type":"scale","required":false},
-  {"id":"custom_q4","text":"마지막 건강 질문","type":"boolean","required":false}
+    {"id":"custom_q4","text":"마지막 건강 질문","type":"boolean","required":false}
 ]`
           const response = await spark.llm(prompt, "gpt-4o-mini", true)
           
