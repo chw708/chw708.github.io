@@ -2,7 +2,14 @@
 
 ## Quick Setup
 
-Your Teresa Health app is now configured for GitHub Pages deployment. 
+Your Teresa Health app is now configured for GitHub Pages deployment with the latest fixes for proper loading.
+
+### Recent Fixes Applied:
+- ✅ Updated Vite configuration for user GitHub Pages site (`chw708.github.io`)
+- ✅ Fixed base path configuration to use `/` for user sites
+- ✅ Updated deployment workflow to use modern GitHub Pages actions
+- ✅ Added `.nojekyll` file to prevent Jekyll processing
+- ✅ Updated Node.js version to 20 in deployment workflow
 
 ### Steps to Deploy:
 
@@ -13,7 +20,7 @@ Your Teresa Health app is now configured for GitHub Pages deployment.
 2. **Push your code to GitHub:**
    ```bash
    git add .
-   git commit -m "Deploy Teresa Health app"
+   git commit -m "Fix GitHub Pages deployment - app ready"
    git push origin main
    ```
 
@@ -30,7 +37,7 @@ Your Teresa Health app is now configured for GitHub Pages deployment.
 
 - When you push to the `main` branch, GitHub Actions will:
   1. Install dependencies
-  2. Build your React app
+  2. Build your React app with production settings
   3. Deploy it to GitHub Pages
   4. Make it available at your GitHub Pages URL
 
@@ -48,10 +55,12 @@ Make sure these settings are correct in your GitHub repository:
 - Wait 10 minutes after first deployment
 - Check repository is public
 - Verify Pages source is set to "GitHub Actions"
+- Clear browser cache and try again
 
 **Build failing?**
 - Check the "Actions" tab in your GitHub repository
 - Look for error messages in the build logs
+- Ensure all dependencies are properly installed
 
 **404 on page refresh?**
 - This is normal for single-page apps on GitHub Pages
