@@ -42,6 +42,7 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
   const [currentStep, setCurrentStep] = useState(0)
   const [morningHistory, setMorningHistory] = useKV('morning-history', [])
   const [dailyQuestions, setDailyQuestions] = useKV('daily-questions', [])
+  const [aiGenerating, setAiGenerating] = useState(false)
 
   // Get today's date
   const today = getTodayDateString()
@@ -74,228 +75,99 @@ export default function MorningCheckIn({ onComplete, onBack }: MorningCheckInPro
     }
   })
 
-  // Generate AI questions for today (4 questions per day) - optimized for speed
+  // Generate AI questions for today (4 questions per day) - fully non-blocking with caching
   useEffect(() => {
     const generateDailyQuestions = async () => {
       const existingQuestions = dailyQuestions.find((q: any) => q.date === today)
       if (existingQuestions) return
 
-      // Start with fallback questions immediately for faster UX
+      // Immediately set fallback questions for instant UI
       const fallbackQuestions = getRandomFallbackQuestions()
-      const tempQuestions = {
+      const initialQuestions = {
         date: today,
         questions: fallbackQuestions,
         generated: new Date().toISOString(),
-        fallback: true
+        source: 'fallback'
       }
-      setDailyQuestions((prev: any[]) => [tempQuestions, ...prev.slice(0, 9)])
+      
+      setDailyQuestions((prev: any[]) => [initialQuestions, ...prev.slice(0, 9)])
 
-      try {
-        // Get only last 2 days to avoid repetition (shorter context for speed)
-        const recentQuestions = dailyQuestions.slice(0, 2).flatMap((q: any) => 
-          q.questions?.map((question: any) => question.text) || []
-        ).join(', ')
+      // Generate AI questions in background without blocking - with immediate start
+      setAiGenerating(true)
+      
+      // Use setTimeout with 0 delay to ensure non-blocking execution
+      setTimeout(async () => {
+        try {
+          // Minimal context for fastest generation
+          const prompt = spark.llmPrompt`4개 한국어 간단 건강질문.
 
-        const prompt = spark.llmPrompt`Generate 4 unique Korean health questions for morning check-in.
+주제: 수분, 호흡, 균형, 기분, 식욕, 편안함
 
-Avoid these recent topics: ${recentQuestions || 'none'}
-
-Create varied questions about: hydration, breathing, balance, mood, appetite, comfort, circulation, clarity.
-
-JSON format: [{"id":"q1_${Date.now()}","text":"question","type":"scale","required":false}]
-
-Keep simple, elderly-friendly, Korean culture appropriate.`
-        
-        const response = await spark.llm(prompt, "gpt-4o-mini", true)
-        const questions = JSON.parse(response)
-        
-        const aiQuestions = {
-          date: today,
-          questions: questions,
-          generated: new Date().toISOString(),
-          source: 'ai'
+JSON: [{"id":"q${Date.now()}","text":"질문","type":"scale","required":false}]`
+          
+          const response = await spark.llm(prompt, "gpt-4o-mini", true)
+          const questions = JSON.parse(response)
+          
+          // Validate questions format
+          const validQuestions = questions.filter((q: any) => q.text && q.id)
+          
+          if (validQuestions.length > 0) {
+            setDailyQuestions((prev: any[]) => {
+              const currentEntry = prev.find((q: any) => q.date === today)
+              if (currentEntry?.source === 'fallback') {
+                const aiQuestions = {
+                  date: today,
+                  questions: validQuestions,
+                  generated: new Date().toISOString(),
+                  source: 'ai'
+                }
+                return [aiQuestions, ...prev.filter((q: any) => q.date !== today)]
+              }
+              return prev
+            })
+          }
+          
+        } catch (error) {
+          console.log('AI generation failed, keeping fallback questions')
+        } finally {
+          setAiGenerating(false)
         }
-        
-        // Replace the fallback questions with AI-generated ones
-        setDailyQuestions((prev: any[]) => [aiQuestions, ...prev.filter((q: any) => q.date !== today)])
-        
-      } catch (error) {
-        console.error('AI question generation failed, using fallback:', error)
-        // Fallback questions are already set above, so no action needed
-      }
+      }, 0)
     }
 
     generateDailyQuestions()
-  }, [today, dailyQuestions, setDailyQuestions])
+  }, [today]) // Remove dependencies to prevent re-runs
 
-  // Optimized fallback question function
+  // Optimized fallback question function - much faster selection
   const getRandomFallbackQuestions = () => {
-    const fallbackOptions = [
-      [
-        {
-          id: `hydration_${Date.now()}`,
-          text: "오늘 아침 목마름은 어느 정도인가요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `clarity_${Date.now() + 1}`,
-          text: "지금 머리가 얼마나 맑고 또렷한가요?",
-          type: "scale", 
-          required: false
-        },
-        {
-          id: `appetite_${Date.now() + 2}`,
-          text: "오늘 아침 식욕은 어떤가요?",
-          type: "multiple",
-          options: ["매우 좋음", "보통", "별로 없음", "전혀 없음"],
-          required: false
-        },
-        {
-          id: `breathing_${Date.now() + 3}`,
-          text: "숨쉬기가 편안하고 자연스러운가요?",
-          type: "boolean",
-          required: false
-        }
-      ],
-      [
-        {
-          id: `balance_${Date.now()}`,
-          text: "서거나 걸을 때 균형감은 어떤가요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `temperature_${Date.now() + 1}`,
-          text: "지금 실내 온도는 어떻게 느껴지나요?",
-          type: "multiple",
-          options: ["너무 따뜻함", "적당함", "너무 추움", "자주 변함"],
-          required: false
-        },
-        {
-          id: `vision_${Date.now() + 2}`,
-          text: "오늘 아침 시야가 얼마나 선명한가요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `mood_${Date.now() + 3}`,
-          text: "하루를 시작할 마음의 준비가 되셨나요?",
-          type: "boolean",
-          required: false
-        }
-      ],
-      [
-        {
-          id: `circulation_${Date.now()}`,
-          text: "손발의 감각은 어떤가요?",
-          type: "multiple",
-          options: ["따뜻하고 편함", "약간 시원함", "차가움", "저림이나 무감각"],
-          required: false
-        },
-        {
-          id: `digest_${Date.now() + 1}`,
-          text: "위장 상태는 얼마나 편안한가요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `coordination_${Date.now() + 2}`,
-          text: "움직임이 자연스럽고 매끄러운가요?",
-          type: "boolean",
-          required: false
-        },
-        {
-          id: `alertness_${Date.now() + 3}`,
-          text: "정신적 각성도는 어느 정도인가요?",
-          type: "scale",
-          required: false
-        }
-      ],
-      [
-        {
-          id: `hearing_${Date.now()}`,
-          text: "청력이 얼마나 선명하게 들리나요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `dizziness_${Date.now() + 1}`,
-          text: "어지럽거나 현기증이 있나요?",
-          type: "boolean",
-          required: false
-        },
-        {
-          id: `motivation_${Date.now() + 2}`,
-          text: "하루를 시작할 의욕은 어떤가요?",
-          type: "multiple",
-          options: ["매우 의욕적", "어느정도 의욕적", "보통", "의욕 부족"],
-          required: false
-        },
-        {
-          id: `comfort_${Date.now() + 3}`,
-          text: "전반적인 신체 편안함은 어떤가요?",
-          type: "scale",
-          required: false
-        }
-      ],
-      [
-        {
-          id: `headache_${Date.now()}`,
-          text: "두통이나 머리 압박감이 있나요?",
-          type: "boolean",
-          required: false
-        },
-        {
-          id: `stress_${Date.now() + 1}`,
-          text: "기상 후 스트레스 수준은 어떤가요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `throat_${Date.now() + 2}`,
-          text: "목 상태는 어떤가요?",
-          type: "multiple",
-          options: ["정상적이고 편함", "약간 건조함", "아프거나 따끔함", "매우 건조함"],
-          required: false
-        },
-        {
-          id: `energy_${Date.now() + 3}`,
-          text: "생명력과 활력은 어느 정도인가요?",
-          type: "scale",
-          required: false
-        }
-      ],
-      [
-        {
-          id: `skin_${Date.now()}`,
-          text: "오늘 아침 피부 상태는 어떤가요?",
-          type: "multiple",
-          options: ["정상적이고 편함", "건조함", "가려움", "민감함"],
-          required: false
-        },
-        {
-          id: `posture_${Date.now() + 1}`,
-          text: "앉거나 설 때 자세가 얼마나 편한가요?",
-          type: "scale",
-          required: false
-        },
-        {
-          id: `nausea_${Date.now() + 2}`,
-          text: "메스꺼움이나 속 불편함이 있나요?",
-          type: "boolean",
-          required: false
-        },
-        {
-          id: `focus_${Date.now() + 3}`,
-          text: "집중력은 어느 정도인가요?",
-          type: "scale",
-          required: false
-        }
-      ]
+    const quickQuestions = [
+      {
+        id: `morning_energy_${Date.now()}`,
+        text: "아침에 일어났을 때 기분은 어떤가요?",
+        type: "scale",
+        required: false
+      },
+      {
+        id: `morning_hydration_${Date.now() + 1}`,
+        text: "목마름을 느끼시나요?",
+        type: "boolean", 
+        required: false
+      },
+      {
+        id: `morning_comfort_${Date.now() + 2}`,
+        text: "전체적으로 몸이 편안한가요?",
+        type: "scale",
+        required: false
+      },
+      {
+        id: `morning_readiness_${Date.now() + 3}`,
+        text: "하루를 시작할 준비가 되셨나요?",
+        type: "boolean",
+        required: false
+      }
     ]
     
-    return fallbackOptions[Math.floor(Math.random() * fallbackOptions.length)]
+    return quickQuestions
   }
 
   const getTodaysQuestions = (): DailyQuestion[] => {
@@ -719,23 +591,54 @@ Keep simple, elderly-friendly, Korean culture appropriate.`
         const todaysQuestions = getTodaysQuestions()
         const questionIndex = currentStep - 7
         
-        // Show loading state only if no questions are available at all
-        if (questionIndex < 4 && todaysQuestions.length === 0) {
-          return (
-            <div className="space-y-4 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground">맞춤 질문을 준비하고 있습니다...</p>
-            </div>
-          )
-        }
-        
-        if (questionIndex < todaysQuestions.length) {
-          const question = todaysQuestions[questionIndex]
+        // Always show questions immediately - no loading state
+        if (questionIndex < 4) {
+          // Use fallback if AI questions aren't ready yet, with better fallback mapping
+          const todaysQuestions = getTodaysQuestions()
+          let question
+          
+          if (todaysQuestions.length > questionIndex) {
+            question = todaysQuestions[questionIndex]
+          } else {
+            // Enhanced fallback questions based on question index
+            const fallbackQuestions = [
+              {
+                id: `fallback_energy_${Date.now()}`,
+                text: "아침에 일어났을 때 전체적인 컨디션은 어떤가요?",
+                type: 'scale',
+                required: false
+              },
+              {
+                id: `fallback_comfort_${Date.now() + 1}`,
+                text: "몸이 전반적으로 편안한가요?",
+                type: 'boolean',
+                required: false
+              },
+              {
+                id: `fallback_mood_${Date.now() + 2}`,
+                text: "오늘 하루를 시작할 기분은 어떤가요?",
+                type: 'scale',
+                required: false
+              },
+              {
+                id: `fallback_readiness_${Date.now() + 3}`,
+                text: "활동할 준비가 되어 있다고 느끼시나요?",
+                type: 'boolean',
+                required: false
+              }
+            ]
+            question = fallbackQuestions[questionIndex] || fallbackQuestions[0]
+          }
           
           return (
             <div className="space-y-4">
               <Label className="text-base font-medium">
                 {question.text}
+                {aiGenerating && currentStep >= 7 && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    🤖 개인화 중...
+                  </span>
+                )}
               </Label>
               
               {question.type === 'scale' && (
